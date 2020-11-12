@@ -1,0 +1,193 @@
+---
+title: "allTogetherDiversity"
+author: "Tess Attenborough"
+date: "06/07/2020"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+library(immunarch)
+library("devtools")
+library("ggplot2")
+library("vegan")
+library("ineq")
+library("tidyverse")
+library("praise")
+library("scales")
+library("patchwork")
+library("ghibli")
+library("magick")
+library("ggpubr")
+
+
+```
+
+
+
+```{r}
+
+#write.csv(CD4_subsample, "CD4_subsample_data.csv")
+#write.csv(CD8_subsample, "CD8_subsample_data.csv")
+
+CD4_subsample_factors <- read.csv("CD4_subsample_data.csv", stringsAsFactors = FALSE)
+CD8_subsample_factors <- read.csv("CD8_subsample_data.csv", stringsAsFactors = FALSE)
+
+CD4_subsample_factors$Week <- as.factor(CD4_subsample_factors$Week) #make weeks into factors
+head(CD4_subsample_factors)
+
+alpha_CD4_subsample_factors <- subset(CD4_subsample_factors, Chain =="alpha") #just alpha chain
+beta_CD4_subsample_factors <- subset(CD4_subsample_factors, Chain =="beta")#just beta chain
+
+
+#ghibli_palettes$MarnieMedium1
+#gini and shnnon in cd4 alpha
+p1 = ggplot(alpha_CD4_subsample_factors, aes(x = factor(Week), y = Gini.coefficient, fill = group)) +
+  geom_boxplot(alpha = 0.80) +
+  geom_point(aes(fill = group), size = 5, shape = 21, position = position_jitterdodge()) +
+  theme(panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank())+
+  labs(title="Gini coefficient (CD4 alpha chain)",x="Week", y = "Gini coefficient", fill = "Group")+  theme_bw()+scale_fill_manual(labels = c("CT", "PTI"), values = c("#008E90FF", "#F0D77BFF")) + theme(
+    plot.title = element_text(color="black", size=24, face="bold"),
+    axis.title.x = element_text(color="black", size=20, face="bold"),
+    axis.title.y = element_text(color="black", size=20, face="bold"),
+    axis.text=element_text(size=20),
+    legend.title = element_text(color = "black", size = 26),
+    legend.text = element_text(color = "black", size = 24)) + ylim(0, 0.5)
+p1
+ggsave("PENTA_cd4_alpha_gini_subb.pdf", width = 27, height = 20, units = c('cm'))
+
+p2 = ggplot(alpha_CD4_subsample_factors, aes(x = factor(Week), y = Shannon.entropy, fill = group)) +
+  geom_boxplot(alpha = 0.80) +
+  geom_point(aes(fill = group), size = 5, shape = 21, position = position_jitterdodge()) +
+  theme(panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank())+
+  labs(title="Shannon entropy (CD4 alpha chain)",x="Week", y = "Shannon entropy", fill = "Group")+  theme_bw()+scale_fill_manual(labels = c("CT", "PTI"), values = c("#5C5992FF", "#B4DAE5FF")) + theme(
+    plot.title = element_text(color="black", size=24, face="bold"),
+    axis.title.x = element_text(color="black", size=20, face="bold"),
+    axis.title.y = element_text(color="black", size=20, face="bold"),
+    axis.text=element_text(size=20),
+    legend.title = element_text(color = "black", size = 26),
+    legend.text = element_text(color = "black", size = 24))+ ylim(8, 14)
+p2
+ggsave("PENTA_cd4_alpha_shannon_subb.pdf", width = 27, height = 20, units = c('cm'))
+
+p3 = ggplot(beta_CD4_subsample_factors, aes(x = factor(Week), y = Gini.coefficient, fill = group)) +
+  geom_boxplot(alpha = 0.80) +
+  geom_point(aes(fill = group), size = 5, shape = 21, position = position_jitterdodge()) +
+  theme(panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank())+
+  labs(title="Gini coefficient (CD4 beta chain)",x="Week", y = "Gini coefficient", fill = "Group")+  theme_bw()+scale_fill_manual(labels = c("CT", "PTI"), values = c("#008E90FF", "#F0D77BFF")) + theme(
+    plot.title = element_text(color="black", size=24, face="bold"),
+    axis.title.x = element_text(color="black", size=20, face="bold"),
+    axis.title.y = element_text(color="black", size=20, face="bold"),
+    axis.text=element_text(size=20),
+    legend.title = element_text(color = "black", size = 26),
+    legend.text = element_text(color = "black", size = 24)) + ylim(0, 0.5)
+p3
+ggsave("PENTA_cd4_beta_gini_subb.pdf", width = 27, height = 20, units = c('cm'))
+
+p4 = ggplot(beta_CD4_subsample_factors, aes(x = factor(Week), y = Shannon.entropy, fill = group)) +
+  geom_boxplot(alpha = 0.80) +
+  geom_point(aes(fill = group), size = 5, shape = 21, position = position_jitterdodge()) +
+  theme(panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank())+
+  labs(title="Shannon entropy (CD4 beta chain)",x="Week", y = "Shannon entropy", fill = "Group")+  theme_bw()+scale_fill_manual(labels = c("CT", "PTI"), values = c("#5C5992FF", "#B4DAE5FF")) + theme(
+    plot.title = element_text(color="black", size=24, face="bold"),
+    axis.title.x = element_text(color="black", size=20, face="bold"),
+    axis.title.y = element_text(color="black", size=20, face="bold"),
+    axis.text=element_text(size=20),
+    legend.title = element_text(color = "black", size = 26),
+    legend.text = element_text(color = "black", size = 24))+ ylim(8, 14)
+p4
+ggsave("PENTA_cd4_beta_shannon_subb.pdf", width = 27, height = 20, units = c('cm'))
+
+
+p1 + p3+ p2 + p4 +
+  plot_layout(guides = 'collect')
+
+
+ggsave("PENTA_cd4_diversities_subb.pdf", width = 38, height = 30, units = c('cm'))
+
+```
+
+
+```{r}
+CD8_subsample_factors$Week <- as.factor(CD8_subsample_factors$Week) #make weeks into factors
+head(CD8_subsample_factors)
+
+alpha_CD8_subsample_factors <- subset(CD8_subsample_factors, Chain =="alpha") #just alpha chain
+beta_CD8_subsample_factors <- subset(CD8_subsample_factors, Chain =="beta")#just beta chain
+
+
+#ghibli_palettes$MarnieMedium1
+#gini and shnnon in CD8 alpha
+p1 = ggplot(alpha_CD8_subsample_factors, aes(x = factor(Week), y = Gini.coefficient, fill = group)) +
+  geom_boxplot(alpha = 0.80) +
+  geom_point(aes(fill = group), size = 5, shape = 21, position = position_jitterdodge()) +
+  theme(panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank())+
+  labs(title="Gini coefficient (CD8 alpha chain)",x="Week", y = "Gini coefficient", fill = "Group")+  theme_bw()+scale_fill_manual(labels = c("CT", "PTI"), values = c("#008E90FF", "#F0D77BFF")) + theme(
+    plot.title = element_text(color="black", size=24, face="bold"),
+    axis.title.x = element_text(color="black", size=20, face="bold"),
+    axis.title.y = element_text(color="black", size=20, face="bold"),
+    axis.text=element_text(size=20),
+    legend.title = element_text(color = "black", size = 26),
+    legend.text = element_text(color = "black", size = 24))+ ylim(0, 0.8)
+p1
+ggsave("PENTA_CD8_alpha_gini_subb.pdf", width = 27, height = 20, units = c('cm'))
+
+p2 = ggplot(alpha_CD8_subsample_factors, aes(x = factor(Week), y = Shannon.entropy, fill = group)) +
+  geom_boxplot(alpha = 0.80) +
+  geom_point(aes(fill = group), size = 5, shape = 21, position = position_jitterdodge()) +
+  theme(panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank())+
+  labs(title="Shannon entropy (CD8 alpha chain)",x="Week", y = "Shannon entropy", fill = "Group")+  theme_bw()+scale_fill_manual(labels = c("CT", "PTI"), values = c("#5C5992FF", "#B4DAE5FF")) + theme(
+    plot.title = element_text(color="black", size=24, face="bold"),
+    axis.title.x = element_text(color="black", size=20, face="bold"),
+    axis.title.y = element_text(color="black", size=20, face="bold"),
+    axis.text=element_text(size=20),
+    legend.title = element_text(color = "black", size = 26),
+    legend.text = element_text(color = "black", size = 24))+ ylim(6, 12)
+p2
+ggsave("PENTA_CD8_alpha_shannon_subb.pdf", width = 27, height = 20, units = c('cm'))
+
+p3 = ggplot(beta_CD8_subsample_factors, aes(x = factor(Week), y = Gini.coefficient, fill = group)) +
+  geom_boxplot(alpha = 0.80) +
+  geom_point(aes(fill = group), size = 5, shape = 21, position = position_jitterdodge()) +
+  theme(panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank())+
+  labs(title="Gini coefficient (CD8 beta chain)",x="Week", y = "Gini coefficient", fill = "Group")+  theme_bw()+scale_fill_manual(labels = c("CT", "PTI"), values = c("#008E90FF", "#F0D77BFF")) + theme(
+    plot.title = element_text(color="black", size=24, face="bold"),
+    axis.title.x = element_text(color="black", size=20, face="bold"),
+    axis.title.y = element_text(color="black", size=20, face="bold"),
+    axis.text=element_text(size=20),
+    legend.title = element_text(color = "black", size = 26),
+    legend.text = element_text(color = "black", size = 24))+ ylim(0, 0.8)
+p3
+ggsave("PENTA_CD8_beta_gini_subb.pdf", width = 27, height = 20, units = c('cm'))
+
+p4 = ggplot(beta_CD8_subsample_factors, aes(x = factor(Week), y = Shannon.entropy, fill = group)) +
+  geom_boxplot(alpha = 0.80) +
+  geom_point(aes(fill = group), size = 5, shape = 21, position = position_jitterdodge()) +
+  theme(panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank())+
+  labs(title="Shannon entropy (CD8 beta chain)",x="Week", y = "Shannon entropy", fill = "Group")+  theme_bw()+scale_fill_manual(labels = c("CT", "PTI"), values = c("#5C5992FF", "#B4DAE5FF")) + theme(
+    plot.title = element_text(color="black", size=24, face="bold"),
+    axis.title.x = element_text(color="black", size=20, face="bold"),
+    axis.title.y = element_text(color="black", size=20, face="bold"),
+    axis.text=element_text(size=20),
+    legend.title = element_text(color = "black", size = 26),
+    legend.text = element_text(color = "black", size = 24))+ ylim(6, 12)
+p4
+ggsave("PENTA_CD8_beta_shannon_subb.pdf", width = 27, height = 20, units = c('cm'))
+
+
+p1 + p3+ p2 + p4 +
+  plot_layout(guides = 'collect')
+
+
+ggsave("PENTA_CD8_diversities_subb.pdf", width = 38, height = 30, units = c('cm'))
+
+```
+

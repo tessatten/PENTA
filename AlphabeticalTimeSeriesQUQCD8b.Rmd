@@ -1,0 +1,488 @@
+---
+title: "time series and total shared"
+author: "Tess Attenborough"
+date: "25/06/2020"
+output: html_document
+---
+
+
+# Load libraries
+```{r}
+library(data.table)
+library(zoo)
+library(plyr)
+library(scales)
+library(ggplot2)
+library(ggthemes)
+library(dplyr)
+library(plotly)
+library(pracma)
+library(Hmisc)
+library(rpart)
+library(survminer)
+library(knitr)
+library(grid)
+library(stringr)
+library(ggrepel)
+library(ggjoy)
+library(RColorBrewer)
+library(stringdist)
+library(ape)
+library(reshape2)
+library(gplots)
+library(ineq)
+library(vegan)
+library(Rtsne)
+library(praise)
+```
+
+Next, a multiplot function to produce ggplot grid plots.
+```{r}
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  require(grid)
+
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+
+  numPlots = length(plots)
+
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                    ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+
+ if (numPlots==1) {
+    print(plots[[1]])
+
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+```
+
+```{r}
+#import a dataframe suitable (should contain these things)
+#dat <- data.frame(ID, month, chain, V1#CDR3s, V2#Freqs, stringsAsFactors = F)
+#CD4
+#ID, month, chain, CDR3, freq
+ID <- CD8cdr3PostProcess$ID
+weekPost <- CD8cdr3PostProcess$weekPost
+chain <- CD8cdr3PostProcess$chain
+V1 <- CD8cdr3PostProcess$V1 #CDR3s
+V2 <- CD8cdr3PostProcess$V2 #Freqs
+
+dat <- data.frame(ID, weekPost, chain, V1, V2, stringsAsFactors = F)
+
+# Rename IDs
+dat$ID[dat$ID == 'QUKPTIW'] <- 'K'
+dat$ID[dat$ID == 'QULPTIW'] <- 'L'
+dat$ID[dat$ID == 'QUQPTIW'] <- 'Q'
+dat$ID[dat$ID == 'QUTPTIW'] <- 'T'
+
+```
+
+
+```{r}
+#  y | x1 | x2 | shared |
+# ---|----|----|--------|
+#  1 |  1 |  2 |   50   |
+#  1 |  2 |  3 |   50   |
+#  1 |  1 |  3 |   25   |
+
+#we're going to start with patient K on their CD8 alphas
+shared <- data.frame()
+
+weekPosts <- unique(dat$weekPost[dat$ID == "Q" & dat$chain == "b"]) # selects unique time points
+weekPosts <- weekPosts[order(weekPosts)] # orders time points, smallest first
+ 
+dat$fillseq <- NA #creates a column for the 'colour number'
+
+firstDataFrame = subset(dat, subset=(dat$ID == "Q" & dat$chain == "b")) #creates a dataframe with just the data of interest - eg Patient K, alpha chain, CD8 cells
+
+
+
+pie = firstDataFrame[ order(firstDataFrame$V1, -firstDataFrame$V2), ] #groups together clonotypes, lists them alphabetically and within clonotype sorts highest tp lowest
+
+cherrypie = pie[!duplicated(pie$V1), ] #deletes duplicates so largest exp is kept if clonotype appears more than once
+
+goodcherrypie = cherrypie[ order(cherrypie$weekPost, -cherrypie$V2), ] #time points are in order, then within time points clonotypes are listed in reverse order
+
+alphabeticalgoodcherrypie = goodcherrypie[ order(goodcherrypie$V1), ] #reorders the clonotypes alphabetically (for similarity)
+
+fillseq <- seq(1, length(alphabeticalgoodcherrypie$V1)) #make list of numbers corresponding with number of unique clonotypes
+
+alphabeticalgoodcherrypie$fillseq <- fillseq #add numbers from fillseq to data frame with unique clonotypes
+
+backToDat <- alphabeticalgoodcherrypie[,c(4,6)] #make a dataframe with just cdr3seq and fillseq number
+
+datWithFillseq <- merge(firstDataFrame, backToDat, "V1") #merge together so original data frame has correct fillseq number associated
+
+datWithFillseq  <- datWithFillseq[,-6] #remove null column
+names(datWithFillseq)[names(datWithFillseq) == 'fillseq.y'] <- 'fillseq' #rename column
+datWithFillseq  <- datWithFillseq[, c(2,3,4,1,5,6)] #reorder columns so they are the same as original order
+
+
+#first we are making the dataset that will be used to compare clonotypes across all the samples
+temp1 <- datWithFillseq[datWithFillseq$ID == "Q" & datWithFillseq$weekPost == "0" & datWithFillseq$chain == "b",] #t0 first time point
+temp2 <- datWithFillseq[datWithFillseq$ID == "Q" & datWithFillseq$weekPost == "12" & datWithFillseq$chain == "b",] #t1 second time point
+temp3 <- datWithFillseq[datWithFillseq$ID == "Q" & datWithFillseq$weekPost == "48" & datWithFillseq$chain == "b",] #third time point
+temp4 <- datWithFillseq[datWithFillseq$ID == "Q" & datWithFillseq$weekPost == "150" & datWithFillseq$chain == "b",] #fourth time point
+#intersectA <- temp2[temp2$V1 %in% temp1$V1,] # overlap overlap( finds all the seqs in temp1 that also appear in temp 2)
+#intersectB <- temp2[temp2$V1 %in% temp3$V1,] # overlap overlap( finds all the seqs in temp1 that also appear in temp 2)
+#intersectC <- temp3[temp3$V1 %in% temp4$V1,] # overlap overlap( finds all the seqs in temp1 that also appear in temp 2)
+        
+        
+#row <- c(dat$ID == "K", weekPosts["0"], weekPosts["12"], ((100/length(temp1$V1)) * length(temp1$V1[temp1$V1 %in% temp2$V1])), ((100/length(temp2$V1)) * length(temp2$V1[temp2$V1 %in% temp1$V1])), length(temp1$V1), length(temp2$V1), dat$chain == "a")
+        
+#shared <- rbind(shared, row)
+#names(shared) <- c('ID', 'x1', 'x2', 'shared', 'sharedTo', 'x1clonotypes', 'x2clonotypes', 'chain')
+        
+        ### Shared clonotype plot ###
+        # creates a vector identifying shared sequences
+temp1$shared <- NA #creates column
+temp2$shared <- NA
+temp3$shared <- NA #creates column
+temp4$shared <- NA
+
+temp1$shared[temp1$V1 %in% temp2$V1 | temp1$V1 %in% temp3$V1 | temp1$V1 %in% temp4$V1] <- T # marks clonotypes that are in temp1 and also in temp2 OR temp 3 OR temp4 as TRUE
+temp1$shared[!temp1$V1 %in% temp2$V1 & !temp1$V1 %in% temp3$V1 & !temp1$V1 %in% temp4$V1] <- F # marks clonotypes that are in temp1 and NOT in temp2 OR temp3 OR temp4 as FALSE
+
+temp2$shared[temp2$V1 %in% temp1$V1 | temp2$V1 %in% temp3$V1 | temp2$V1 %in% temp4$V1] <- T  # marks clonotypes that are in temp2 and temp1 as TRUE
+temp2$shared[!temp2$V1 %in% temp1$V1 & !temp2$V1 %in% temp3$V1 & !temp2$V1 %in% temp4$V1] <- F#  marks clonotypes that are in temp2 and NOT in temp1 as FALSE
+
+temp3$shared[temp3$V1 %in% temp1$V1 | temp3$V1 %in% temp2$V1 | temp3$V1 %in% temp4$V1] <- T  # marks clonotypes that are in temp2 and temp1 as TRUE
+temp3$shared[!temp3$V1 %in% temp1$V1 & !temp3$V1 %in% temp2$V1 & !temp3$V1 %in% temp4$V1] <- F#  marks clonotypes that are in temp2 and NOT in temp1 as FALSE
+
+temp4$shared[temp4$V1 %in% temp1$V1 | temp4$V1 %in% temp2$V1 | temp4$V1 %in% temp3$V1] <- T  # marks clonotypes that are in temp2 and temp1 as TRUE
+temp4$shared[!temp4$V1 %in% temp1$V1 & !temp4$V1 %in% temp2$V1 & !temp4$V1 %in% temp3$V1] <- F#  marks clonotypes that are in temp2 and NOT in temp1 as FALSE
+      
+# orders the dataset by the shared sequences, in order of shared or not (so can do the next stage)
+#temp1 <- temp1[order(temp1$shared, decreasing = TRUE),] #orders the file by seqs that are shared
+#temp2 <- temp2[order(temp2$shared, decreasing = TRUE),]
+#temp3 <- temp3[order(temp3$shared, decreasing = TRUE),]
+#temp4 <- temp4[order(temp4$shared, decreasing = TRUE),]
+
+#testing to see if this the way
+temp1$sharedintersect <- NA #creates column
+temp2$sharedintersect <- NA
+temp3$sharedintersect <- NA #creates column
+temp4$sharedintersect <- NA
+
+#temp1$sharedintersect[temp1$V1 %in% temp2$V1] <- T
+#temp1$sharedintersect[!temp1$V1 %in% temp2$V1] <- F #same for false
+#temp2$sharedintersect[temp2$V1 %in% temp1$V1] <- T
+#temp2$sharedintersect[!temp2$V1 %in% temp1$V1] <- F
+
+
+temp1 <- arrange(temp1,desc(temp1$shared),temp1$fillseq) #orders the file first by seqs that are shared or not, then sorts by fillseq
+temp2 <- arrange(temp2,desc(temp2$shared),temp2$fillseq)
+temp3 <- arrange(temp3,desc(temp3$shared),temp3$fillseq)
+temp4 <- arrange(temp4,desc(temp4$shared),temp4$fillseq)
+
+  # vector to order and colour sequence
+        #temp1$fillseq[temp1$shared == T] <- fillseq
+        #temp1$fillseq[temp1$shared == F] <- length(temp1$fillseq[temp1$shared == T])+1
+       # temp2$fillseq <- temp1$fillseq[match(temp2$V1, temp1$V1)]
+        #temp2$fillseq[temp2$shared == F] <- length(temp2$fillseq[temp2$shared == T])+1
+               
+
+        # create 1 entry for all non-shared sequences
+temp1.mod <- temp1 #duplicates temp1 and saves it as temp1.mod
+temp2.mod <- temp2
+temp3.mod <- temp3 #duplicates temp3 and saves it as temp3.mod
+temp4.mod <- temp4
+
+temp1.mod$V2[length(temp1.mod$ID)] <- sum(temp1.mod$V2[temp1.mod$shared == F]) # the last entry is given the frequency of all the non-shared clonotypes
+temp2.mod$V2[length(temp2.mod$ID)] <- sum(temp2.mod$V2[temp2.mod$shared == F])
+temp3.mod$V2[length(temp3.mod$ID)] <- sum(temp3.mod$V2[temp3.mod$shared == F]) # the last entry is given the frequency of all the non-shared clonotypes
+temp4.mod$V2[length(temp4.mod$ID)] <- sum(temp4.mod$V2[temp4.mod$shared == F])
+
+#temp1.mod$V2[length(temp1.mod$ID)] <- sum(temp1.mod$V2[temp1.mod$sharedintersect == F]) # the last entry is given the frequency of all the non-shared clonotypes
+#temp2.mod$V2[length(temp2.mod$ID)] <- sum(temp2.mod$V2[temp2.mod$sharedintersect == F])
+
+temp1.mod$shared[length(temp1.mod$ID)] <- T #makes the last entry true so it is kept
+temp2.mod$shared[length(temp2.mod$ID)] <- T
+temp3.mod$shared[length(temp3.mod$ID)] <- T #makes the last entry true so it is kept
+temp4.mod$shared[length(temp4.mod$ID)] <- T
+
+#temp1.mod$sharedintersect[length(temp1.mod$ID)] <- T #makes the last entry true so it is kept
+#temp2.mod$sharedintersect[length(temp2.mod$ID)] <- T
+
+temp1.mod <- temp1.mod[!temp1.mod$shared == F,] #gets rid of all non-shared clonotypes
+temp2.mod <- temp2.mod[!temp2.mod$shared == F,]
+temp3.mod <- temp3.mod[!temp3.mod$shared == F,] #gets rid of all non-shared clonotypes
+temp4.mod <- temp4.mod[!temp4.mod$shared == F,]
+
+#temp1.mod <- temp1.mod[!temp1.mod$sharedintersect == F,] #gets rid of all non-shared clonotypes
+#temp2.mod <- temp2.mod[!temp2.mod$sharedintersect == F,]
+
+temp1.mod$shared[length(temp1.mod$ID)] <- F #puts the last entry back to false
+temp2.mod$shared[length(temp2.mod$ID)] <- F
+temp3.mod$shared[length(temp3.mod$ID)] <- F #puts the last entry back to false
+temp4.mod$shared[length(temp4.mod$ID)] <- F
+
+temp1.mod$fillseq[length(temp1.mod$ID)] <- 900000 #puts the last entry last in fillseq order
+temp2.mod$fillseq[length(temp2.mod$ID)] <- 900000
+temp3.mod$fillseq[length(temp3.mod$ID)] <- 900000 #puts the last entry back last in fillseq order
+temp4.mod$fillseq[length(temp4.mod$ID)] <- 900000
+        
+        # normalise sequence frequency
+temp1.mod$V2 <- (100/sum(temp1.mod$V2))*temp1.mod$V2 #turns counts into percentages
+temp2.mod$V2 <- (100/sum(temp2.mod$V2))*temp2.mod$V2
+temp3.mod$V2 <- (100/sum(temp3.mod$V2))*temp3.mod$V2 #turns counts into percentages
+temp4.mod$V2 <- (100/sum(temp4.mod$V2))*temp4.mod$V2
+        
+        #temp1.mod.expanded <- temp1.mod[rep(row.names(temp1.mod), temp1.mod$V2),]
+        #temp2.mod.expanded <- temp2.mod[rep(row.names(temp2.mod), temp2.mod$V2),]
+        
+maxPcntShared <- max(c(100 - sum(temp1.mod$V2[temp1.mod$shared==T]), 100 - sum(temp2.mod$V2[temp2.mod$shared==T]), 100 - sum(temp3.mod$V2[temp3.mod$shared==T]), 100 - sum(temp4.mod$V2[temp4.mod$shared==T]))) #calculates highest % of uniques
+
+minPcntShared <- min(c(100 - sum(temp1.mod$V2[temp1.mod$shared==T]), 100 - sum(temp2.mod$V2[temp2.mod$shared==T]), 100 - sum(temp3.mod$V2[temp3.mod$shared==T]), 100 - sum(temp4.mod$V2[temp4.mod$shared==T]))) #calculates lowest % of uniques (gives % of reads that come from clonotypes unique to the sample)
+        
+        # create x coordinates for line plotting
+#temp1.mod$x <- 1.45 #new column all equalling 1.45
+#temp2.mod$x <- 2.55 #new column all equalling 2.55
+#temp3.mod$x <- 3.65 #new column all equalling 3.65
+#temp4.mod$x <- 4.75 #new column all equalling 4.75
+
+        # create x coordinates for line plotting
+temp1.mod$x <- 4.75 #new column all equalling 1.45
+temp2.mod$x <- 3.65 #new column all equalling 2.55
+temp3.mod$x <- 2.55 #new column all equalling 3.65
+temp4.mod$x <- 1.45 #new column all equalling 4.75
+        
+        # create the y point for the plot
+temp1.mod$y <- 100 - cumsum(temp1.mod$V2) + temp1.mod$V2 #calculates y coordinate for each clonotype
+temp2.mod$y <- 100 - cumsum(temp2.mod$V2) + temp2.mod$V2
+temp3.mod$y <- 100 - cumsum(temp3.mod$V2) + temp3.mod$V2 #calculates y coordinate for each clonotype
+temp4.mod$y <- 100 - cumsum(temp4.mod$V2) + temp4.mod$V2
+    
+#collect relevant data
+intersectA1 <- temp1.mod[temp1.mod$V1 %in% temp2.mod$V1,] # overlap overlap( finds all the seqs in temp1 that also appear in temp 2)
+intersectA2 <- temp2.mod[temp2.mod$V1 %in% temp1.mod$V1,] # overlap overlap( finds all the seqs in temp1 that also appear in temp 2)
+intersectB1 <- temp2.mod[temp2.mod$V1 %in% temp3.mod$V1,] # overlap overlap( finds all the seqs in temp1 that also appear in temp 2)
+intersectB2 <- temp3.mod[temp3.mod$V1 %in% temp2.mod$V1,] # overlap overlap( finds all the seqs in temp1 that also appear in temp 2)
+intersectC1 <- temp3.mod[temp3.mod$V1 %in% temp4.mod$V1,] # overlap overlap( finds all the seqs in temp1 that also appear in temp 2)
+intersectC2 <- temp4.mod[temp4.mod$V1 %in% temp3.mod$V1,] # overlap overlap( finds all the seqs in temp1 that also appear in temp 2)
+
+# merge the two datasets for plotting
+intersectA.mod <- rbind(intersectA1, intersectA2)
+intersectB.mod <- rbind(intersectB1, intersectB2)
+intersectC.mod <- rbind(intersectC1, intersectC2)
+
+yadjst <- 8 # so we can move around the not shared label
+sampleName1 <- paste(unique(temp1.mod$ID), unique(temp1.mod$weekPost), unique(temp1.mod$chain), sep = '-') #makes the sample name
+sampleName2 <- paste(unique(temp2.mod$ID), unique(temp2.mod$weekPost), unique(temp2.mod$chain), sep = '-')
+sampleName3 <- paste(unique(temp3.mod$ID), unique(temp3.mod$weekPost), unique(temp3.mod$chain), sep = '-') #makes the sample name
+sampleName4 <- paste(unique(temp4.mod$ID), unique(temp4.mod$weekPost), unique(temp4.mod$chain), sep = '-')
+        
+ggp <- ggplot()+
+geom_line(aes(x = intersectC.mod$x, y = intersectC.mod$y, group = intersectC.mod$fillseq), colour = 'grey', size = 0.1)+
+geom_line(aes(x = intersectB.mod$x + 0.9, y = intersectB.mod$y, group = intersectB.mod$fillseq), colour = 'grey', size = 0.1)+
+geom_line(aes(x = intersectA.mod$x + 1.8, y = intersectA.mod$y, group = intersectA.mod$fillseq), colour = 'grey', size = 0.1)+
+geom_bar(aes(x = 1, temp4.mod$V2, fill = as.factor(temp4.mod$fillseq), alpha = as.factor(temp4.mod$shared)), stat = 'identity', colour = 'black', size = 0.1) +
+geom_errorbar(aes(x = 1, ymin = round(minPcntShared-yadjst), ymax = round(minPcntShared-yadjst)))+
+geom_bar(aes(x = 3, temp3.mod$V2, fill = as.factor(temp3.mod$fillseq), alpha = as.factor(temp3.mod$shared)), stat = 'identity', colour = 'black', size = 0.1) +
+  geom_bar(aes(x = 5, temp2.mod$V2, fill = as.factor(temp2.mod$fillseq), alpha = as.factor(temp2.mod$shared)), stat = 'identity', colour = 'black', size = 0.1) + 
+  geom_errorbar(aes(x = 5, ymin = round(minPcntShared-yadjst), ymax = round(minPcntShared-yadjst)))+
+
+  geom_bar(aes(x = 7, temp1.mod$V2, fill = as.factor(temp1.mod$fillseq), alpha = as.factor(temp1.mod$shared)), stat = 'identity', colour = 'black', size = 0.1) +
+geom_errorbar(aes(x = 7, ymin = round(minPcntShared-yadjst), ymax = round(minPcntShared-yadjst)))+
+          scale_alpha_manual(values=c(0, 1)) +
+          geom_errorbar(aes(x = 3, ymin = round(minPcntShared-yadjst), ymax = round(minPcntShared-yadjst)))+
+          scale_y_continuous(breaks = c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100))+
+          scale_x_continuous(breaks = c(1, 3, 5, 7), labels = c(150, 48, 12, 0))+
+          geom_text(aes(x = 1, y = round(minPcntShared-yadjst/2)), label = '')+
+          geom_text(aes(x = 3, y = round(minPcntShared-yadjst/2)), label = '')+
+          geom_text(aes(x = 5, y = round(minPcntShared-yadjst/2)), label = '')+
+          geom_text(aes(x = 7, y = round(minPcntShared-yadjst/2)), label = '')+
+          annotate(geom = "segment", x = -Inf, xend = -Inf, y = -Inf, yend = Inf) +
+          annotate(geom = "segment", x = -Inf, xend = -Inf, y =  round(minPcntShared-yadjst), yend = round(minPcntShared, -6),
+                   linetype = "dashed", color = "white")+
+          coord_flip(ylim=c(round(minPcntShared-yadjst), 100), expand = T) +
+          labs(title = expression(paste('Shared Clonotypes Patient Q CD8+ ',beta, ' chain')), x = 'Week', y = 'Cumulative % of Sample')+
+          theme(legend.position="none", panel.background = element_blank())
+        
+ggsave(paste(wd, '/', paste(sampleName1, sampleName2, sampleName3, sampleName4, sep = '_'), '_CD8_PTI_final',  '.pdf', sep = ''), 
+ggp, width = 17, height = 10, units = c('cm'))
+
+#shared$delta <- shared$x2 - shared$x1
+#shared$chain[shared$chain == 1] <- 'a'
+#shared$chain[shared$chain == 2] <- 'b'
+
+shared <- data.frame()
+
+chains <- c('b', 'a')
+for (chain in chains){
+  for (i in unique(firstDataFrame$ID)){
+    weekPost <- unique(firstDataFrame$weekPost[firstDataFrame$ID == i & firstDataFrame$chain == chain])
+    weekPost <- weekPost[order(weekPost)]
+    
+    # loop of t1s
+    for (j in seq(2, length(weekPost))){
+      
+      # loop of t0s to t1
+      for (k in seq(1, j-1)){
+        
+        if (i == 'K'){ID <- 1}
+        if (i == 'L'){ID <- 2}
+        if (i == 'Q'){ID <- 3}
+        if (i == 'T'){ID <- 4}
+        
+        temp1 <- firstDataFrame[firstDataFrame$ID == i & firstDataFrame$weekPost == weekPost[k] & firstDataFrame$chain == chain,] #t0
+        temp2 <- firstDataFrame[firstDataFrame$ID == i & firstDataFrame$weekPost == weekPost[j] & firstDataFrame$chain == chain,] #t1
+        temp3 <- temp1[temp1$V1 %in% temp2$V1,] # overlap
+        
+        if (chain == 'b'){tempChain <- 1}
+        if (chain == 'a'){tempChain <- 2}
+        
+        row <- c(ID, weekPost[k], weekPost[j], ((100/length(temp1$V1)) * length(temp1$V1[temp1$V1 %in% temp2$V1])), ((100/length(temp2$V1)) * length(temp2$V1[temp2$V1 %in% temp1$V1])), length(temp1$V1), length(temp2$V1), tempChain)
+        
+        shared <- rbind(shared, row)
+        names(shared) <- c('ID', 'x1', 'x2', 'shared', 'sharedTo', 'x1clonotypes', 'x2clonotypes', 'chain')
+        
+        ### Shared clonotype plot ###
+        # creates a vector identifying shared sequences
+        temp1$shared <- NA
+        temp2$shared <- NA
+        temp1$shared[temp1$V1 %in% temp2$V1] <- T
+        temp1$shared[!temp1$V1 %in% temp2$V1] <- F
+        temp2$shared[temp2$V1 %in% temp1$V1] <- T
+        temp2$shared[!temp2$V1 %in% temp1$V1] <- F
+        
+        # orders the dataset by the shared sequences, in order of clonal expansion size
+        temp1 <- temp1[order(-temp1$shared, -temp1$V2),]
+        
+        # vector to order and colour sequence
+        fillseq <- seq(1, length(temp1$ID[temp1$shared == T]))
+        temp1$fillseq <- NA
+        temp2$fillseq <- NA
+        temp1$fillseq[temp1$shared == T] <- fillseq
+        temp1$fillseq[temp1$shared == F] <- length(temp1$fillseq[temp1$shared == T])+1
+        temp2$fillseq <- temp1$fillseq[match(temp2$V1, temp1$V1)]
+        temp2$fillseq[temp2$shared == F] <- length(temp2$fillseq[temp2$shared == T])+1
+        
+        # orders the dataset by the shared sequences, in order of clonal expansion size
+        temp2 <- temp2[order(temp2$fillseq),]
+        
+        # create 1 entry for all non-shared sequences
+        temp1.mod <- temp1
+        temp2.mod <- temp2
+        temp1.mod$V2[length(temp1.mod$ID)] <- sum(temp1.mod$V2[temp1.mod$shared == F])
+        temp2.mod$V2[length(temp2.mod$ID)] <- sum(temp2.mod$V2[temp2.mod$shared == F])
+        temp1.mod$shared[length(temp1.mod$ID)] <- T
+        temp2.mod$shared[length(temp2.mod$ID)] <- T
+        temp1.mod <- temp1.mod[!temp1.mod$shared == F,]
+        temp2.mod <- temp2.mod[!temp2.mod$shared == F,]
+        temp1.mod$shared[length(temp1.mod$ID)] <- F
+        temp2.mod$shared[length(temp2.mod$ID)] <- F
+        
+        # normalise sequence frequency
+        temp1.mod$V2 <- (100/sum(temp1.mod$V2))*temp1.mod$V2 
+        temp2.mod$V2 <- (100/sum(temp2.mod$V2))*temp2.mod$V2
+        
+        #temp1.mod.expanded <- temp1.mod[rep(row.names(temp1.mod), temp1.mod$V2),]
+        #temp2.mod.expanded <- temp2.mod[rep(row.names(temp2.mod), temp2.mod$V2),]
+        
+        maxPcntShared <- max(c(100 - sum(temp1.mod$V2[temp1.mod$shared==T]), 100 - sum(temp2.mod$V2[temp2.mod$shared==T])))
+        minPcntShared <- min(c(100 - sum(temp1.mod$V2[temp1.mod$shared==T]), 100 - sum(temp2.mod$V2[temp2.mod$shared==T])))
+        
+        # create x coordinates for line plotting
+        temp1.mod$x <- 1.45
+        temp2.mod$x <- 2.55
+        
+        # create the y point for the plot
+        temp1.mod$y <- 100 - cumsum(temp1.mod$V2) + temp1.mod$V2
+        temp2.mod$y <- 100 - cumsum(temp2.mod$V2) + temp2.mod$V2
+        
+        # merge the two datasets for plotting
+        temp3.mod <- rbind(temp1.mod, temp2.mod)
+        
+        yadjst <- 8
+        sampleName1 <- paste(unique(temp1.mod$ID), unique(temp1.mod$weekPost), unique(temp1.mod$chain), sep = '-')
+        sampleName2 <- paste(unique(temp2.mod$ID), unique(temp2.mod$weekPost), unique(temp2.mod$chain), sep = '-')
+        
+      }
+    }
+  }
+}
+shared$delta <- shared$x2 - shared$x1
+shared$chain[shared$chain == 1] <- 'b'
+shared$chain[shared$chain == 2] <- 'a'
+
+
+
+
+# Shared clonotypes over time
+
+
+cutoff1 <- 6
+cutoff2 <- 20
+shared.mod <- shared
+#shared.mod$group[shared.mod$delta <= cutoff1 | shared.mod$delta >= cutoff2] <- 1
+#shared.mod$group[shared.mod$delta > cutoff1 & shared.mod$delta < cutoff2] <- 2
+
+
+for (i in unique(shared.mod$ID)){
+  for (j in unique(shared.mod$chain)){
+    temp <- shared.mod[shared.mod$ID == i & shared.mod$chain == j,] 
+    
+    if (i == 'K'){ID <- 'K'}
+    if (i == 'L'){ID <- 'L'}
+    if (i == 'Q'){ID <- 'Q'}
+    if (i == 'T'){ID <- 'T'}
+    
+    tempx <- rep(unique(c(temp$x1, temp$x2))[order(unique(c(temp$x1, temp$x2)))], length(unique(c(temp$x1, temp$x2))[order(unique(c(temp$x1, temp$x2)))]))
+    tempy <- as.factor(rep(unique(c(temp$x1, temp$x2))[order(unique(c(temp$x1, temp$x2)))], each = length(unique(c(temp$x1, temp$x2))[order(unique(c(temp$x1, temp$x2)))])))
+    
+    
+    ggp <- ggplot()+
+      
+      geom_point(aes(x = tempx, y = tempy), size = 5)+
+      geom_line(aes(x = tempx, y = tempy))+
+      
+      geom_curve(data = temp, aes(x = x1, y = as.factor(x1), xend = x2, yend = as.factor(x1), 
+                                  group = ID, colour = shared), curvature = -0.2, arrow = arrow(length = unit(0.01, "npc")))+
+      geom_curve(data = temp, aes(x = x1, y = as.factor(x2), xend = x2, yend = as.factor(x2), 
+                                  group = ID, colour = shared), curvature = 0.2, arrow = arrow(length = unit(0.01, "npc")))+
+      
+      geom_text(aes(x = unique(tempx), y = as.factor(unique(c(temp$x1, temp$x2))), 
+                    label = paste(c(unique(temp$x1clonotypes), 
+                                    unique(temp$x2clonotypes[temp$x2 == max(temp$x2)])), 'Clonotypes')), 
+                nudge_y = 0.15)+
+      
+      geom_text(aes(x = unique(tempx), y = as.factor(unique(c(temp$x1, temp$x2))), label = '|'), nudge_y = 0.09)+
+      geom_point(aes(x = unique(tempx), y = unique(tempy)), size = 5, shape = 21, colour = 'black', fill = 'white')+
+      scale_colour_gradientn("% of Shared Clonotypes", colours=c("red","violet","blue"))+
+      scale_alpha("% of Shared S1 Clonotypes", range = c(0.1, 1))+
+      
+      scale_x_continuous(expand = c(0.1,0.1))+
+      scale_y_discrete(expand = c(0.05,0.05))+
+      
+      labs(x = 'Time (weeks)', y = 'Sample of interest (weeks)', nudge_y = 0.09,title = paste('PATIENT', 'Q','CD8', 'beta chain'))+
+      theme_classic()+
+      theme(legend.position = 'bottom', axis.title=element_text(size=15), axis.text=element_text(size=12))
+    
+    ggsave(paste(paste(i, j, sep = '_'), '.pdf', sep = ''), 
+           ggp, width = 20, height = 25, units = c('cm'))
+    
+  }
+}
+write.csv(shared, "shared_QCD8b.csv")
+
+```

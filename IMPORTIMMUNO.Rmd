@@ -1,0 +1,416 @@
+---
+title: "FRJIDRHDFG"
+author: "Tess Attenborough"
+date: "17/09/2020"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+library(immunarch)
+library("devtools")
+library("ggplot2")
+library("vegan")
+library("ineq")
+library("tidyverse")
+library("praise")
+library("scales")
+library("patchwork")
+library("ghibli")
+
+```
+
+
+```{r}
+metadata_alpha <- read.csv("penta_metadata_alpha.txt", sep = "\t", header = TRUE)
+metadata_beta <- read.csv("penta_metadata_beta.txt", sep = "\t", header = TRUE)
+metadata_alpha_CD4 <- read.csv("penta_metadata_alpha_CD4.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+metadata_alpha_CD8 <- read.csv("penta_metadata_alpha_CD8.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+metadata_beta_CD4 <- read.csv("penta_metadata_beta_CD4.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+metadata_beta_CD8 <- read.csv("penta_metadata_beta_CD8.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+
+metadata_alpha = as_tibble(metadata_alpha)
+metadata_beta = as_tibble(metadata_beta)
+metadata_alpha_CD4 = as_tibble(metadata_alpha_CD4)
+metadata_alpha_CD8 = as_tibble(metadata_alpha_CD8)
+metadata_beta_CD4 = as_tibble(metadata_beta_CD4)
+metadata_beta_CD8 = as_tibble(metadata_beta_CD8)
+
+```
+
+
+CD8alpha
+
+```{r}
+######
+mylen <- length(row_number(QUKCD8a0fivethousand_2$CDR3))
+
+rep(NA, mylen)
+
+courgette <- data.frame(Clones = rep(NA, mylen),
+                        Proportion = rep(NA, mylen),
+                        CDR3.nt = rep(NA, mylen),
+                        CDR3.aa = rep(NA, mylen),
+                        V.name = rep(NA, mylen),
+                        D.name = rep(NA, mylen),
+                        J.name = rep(NA, mylen),
+                        V.end = rep(NA, mylen),
+                        D.start = rep(NA, mylen),
+                        D.end = rep(NA, mylen),
+                        J.start = rep(NA, mylen),
+                        VJ.ins = rep(NA, mylen),
+                        VD.ins = rep(NA, mylen),
+                        DJ.in = rep(NA, mylen),
+                        Sequence = rep(NA, mylen))
+
+K0CD8 = courgette
+K0CD8$Clones = QUKCD8a0fivethousand_2$Count
+K0CD8$CDR3.aa = QUKCD8a0fivethousand_2$CDR3
+K0CD8 = as_tibble(K0CD8)
+K0CD8$CDR3.aa <- as.character(K0CD8$CDR3.aa)
+
+####
+######
+mylen <- length(row_number(QULCD8a0fivethousand_2$CDR3))
+
+rep(NA, mylen)
+
+courgette <- data.frame(Clones = rep(NA, mylen),
+                        Proportion = rep(NA, mylen),
+                        CDR3.nt = rep(NA, mylen),
+                        CDR3.aa = rep(NA, mylen),
+                        V.name = rep(NA, mylen),
+                        D.name = rep(NA, mylen),
+                        J.name = rep(NA, mylen),
+                        V.end = rep(NA, mylen),
+                        D.start = rep(NA, mylen),
+                        D.end = rep(NA, mylen),
+                        J.start = rep(NA, mylen),
+                        VJ.ins = rep(NA, mylen),
+                        VD.ins = rep(NA, mylen),
+                        DJ.in = rep(NA, mylen),
+                        Sequence = rep(NA, mylen))
+
+L0CD8 = courgette
+L0CD8$Clones = QULCD8a0fivethousand_2$Count
+L0CD8$CDR3.aa = QULCD8a0fivethousand_2$CDR3
+L0CD8 = as_tibble(L0CD8)
+L0CD8$CDR3.aa <- as.character(L0CD8$CDR3.aa)
+
+####
+
+######
+mylen <- length(row_number(QUECD8a0fivethousand_2$CDR3))
+
+rep(NA, mylen)
+
+courgette <- data.frame(Clones = rep(NA, mylen),
+                        Proportion = rep(NA, mylen),
+                        CDR3.nt = rep(NA, mylen),
+                        CDR3.aa = rep(NA, mylen),
+                        V.name = rep(NA, mylen),
+                        D.name = rep(NA, mylen),
+                        J.name = rep(NA, mylen),
+                        V.end = rep(NA, mylen),
+                        D.start = rep(NA, mylen),
+                        D.end = rep(NA, mylen),
+                        J.start = rep(NA, mylen),
+                        VJ.ins = rep(NA, mylen),
+                        VD.ins = rep(NA, mylen),
+                        DJ.in = rep(NA, mylen),
+                        Sequence = rep(NA, mylen))
+
+E0CD8 = courgette
+E0CD8$Clones = QUECD8a0fivethousand_2$Count
+E0CD8$CDR3.aa = QUECD8a0fivethousand_2$CDR3
+E0CD8 = as_tibble(E0CD8)
+E0CD8$CDR3.aa <- as.character(E0CD8$CDR3.aa)
+
+####
+######
+mylen <- length(row_number(QUKCD8a150fivethousand_2$CDR3))
+
+rep(NA, mylen)
+
+courgette <- data.frame(Clones = rep(NA, mylen),
+                        Proportion = rep(NA, mylen),
+                        CDR3.nt = rep(NA, mylen),
+                        CDR3.aa = rep(NA, mylen),
+                        V.name = rep(NA, mylen),
+                        D.name = rep(NA, mylen),
+                        J.name = rep(NA, mylen),
+                        V.end = rep(NA, mylen),
+                        D.start = rep(NA, mylen),
+                        D.end = rep(NA, mylen),
+                        J.start = rep(NA, mylen),
+                        VJ.ins = rep(NA, mylen),
+                        VD.ins = rep(NA, mylen),
+                        DJ.in = rep(NA, mylen),
+                        Sequence = rep(NA, mylen))
+
+K150CD8 = courgette
+K150CD8$Clones = QUKCD8a150fivethousand_2$Count
+K150CD8$CDR3.aa = QUKCD8a150fivethousand_2$CDR3
+K150CD8 = as_tibble(K150CD8)
+K150CD8$CDR3.aa <- as.character(K150CD8$CDR3.aa)
+
+####
+######
+mylen <- length(row_number(QULCD8a150fivethousand_2$CDR3))
+
+rep(NA, mylen)
+
+courgette <- data.frame(Clones = rep(NA, mylen),
+                        Proportion = rep(NA, mylen),
+                        CDR3.nt = rep(NA, mylen),
+                        CDR3.aa = rep(NA, mylen),
+                        V.name = rep(NA, mylen),
+                        D.name = rep(NA, mylen),
+                        J.name = rep(NA, mylen),
+                        V.end = rep(NA, mylen),
+                        D.start = rep(NA, mylen),
+                        D.end = rep(NA, mylen),
+                        J.start = rep(NA, mylen),
+                        VJ.ins = rep(NA, mylen),
+                        VD.ins = rep(NA, mylen),
+                        DJ.in = rep(NA, mylen),
+                        Sequence = rep(NA, mylen))
+
+L150CD8 = courgette
+L150CD8$Clones = QULCD8a150fivethousand_2$Count
+L150CD8$CDR3.aa = QULCD8a150fivethousand_2$CDR3
+L150CD8 = as_tibble(L150CD8)
+L150CD8$CDR3.aa <- as.character(L150CD8$CDR3.aa)
+
+####
+
+######
+mylen <- length(row_number(QUECD8a0fivethousand_2$CDR3))
+
+rep(NA, mylen)
+
+courgette <- data.frame(Clones = rep(NA, mylen),
+                        Proportion = rep(NA, mylen),
+                        CDR3.nt = rep(NA, mylen),
+                        CDR3.aa = rep(NA, mylen),
+                        V.name = rep(NA, mylen),
+                        D.name = rep(NA, mylen),
+                        J.name = rep(NA, mylen),
+                        V.end = rep(NA, mylen),
+                        D.start = rep(NA, mylen),
+                        D.end = rep(NA, mylen),
+                        J.start = rep(NA, mylen),
+                        VJ.ins = rep(NA, mylen),
+                        VD.ins = rep(NA, mylen),
+                        DJ.in = rep(NA, mylen),
+                        Sequence = rep(NA, mylen))
+
+E150CD8 = courgette
+E150CD8$Clones = QUECD8a0fivethousand_2$Count
+E150CD8$CDR3.aa = QUECD8a0fivethousand_2$CDR3
+E150CD8 = as_tibble(E150CD8)
+E150CD8$CDR3.aa <- as.character(E150CD8$CDR3.aa)
+
+
+# beginning and end
+data <- list( K0CD8 = K0CD8, K150CD8 = K150CD8, L0CD8 = L0CD8, L150CD8 = L150CD8, E0CD8 = E0CD8, E150CD8 = E150CD8)
+# nested lists
+CD8alphaBeginningAndEnd <- list(data = data, meta = metadata_alpha_CD8)#all the alpha CT CD4 samples over 1000 reads
+
+repClonality(CD8alphaBeginningAndEnd$data, "homeo") %>% vis()
+
+ggsave("CD8alpha2.pdf", width = 25, height = 15, units = c('cm'))
+
+####
+```
+
+CD8b
+```{r}
+######
+mylen <- length(row_number(QUKCD8b0fivethousand_1$CDR3))
+
+rep(NA, mylen)
+
+courgette <- data.frame(Clones = rep(NA, mylen),
+                        Proportion = rep(NA, mylen),
+                        CDR3.nt = rep(NA, mylen),
+                        CDR3.aa = rep(NA, mylen),
+                        V.name = rep(NA, mylen),
+                        D.name = rep(NA, mylen),
+                        J.name = rep(NA, mylen),
+                        V.end = rep(NA, mylen),
+                        D.start = rep(NA, mylen),
+                        D.end = rep(NA, mylen),
+                        J.start = rep(NA, mylen),
+                        VJ.ins = rep(NA, mylen),
+                        VD.ins = rep(NA, mylen),
+                        DJ.in = rep(NA, mylen),
+                        Sequence = rep(NA, mylen))
+
+K0CD8 = courgette
+K0CD8$Clones = QUKCD8b0fivethousand_1$Count
+K0CD8$CDR3.aa = QUKCD8b0fivethousand_1$CDR3
+K0CD8 = as_tibble(K0CD8)
+K0CD8$CDR3.aa <- as.character(K0CD8$CDR3.aa)
+
+####
+######
+mylen <- length(row_number(QULCD8b0fivethousand_1$CDR3))
+
+rep(NA, mylen)
+
+courgette <- data.frame(Clones = rep(NA, mylen),
+                        Proportion = rep(NA, mylen),
+                        CDR3.nt = rep(NA, mylen),
+                        CDR3.aa = rep(NA, mylen),
+                        V.name = rep(NA, mylen),
+                        D.name = rep(NA, mylen),
+                        J.name = rep(NA, mylen),
+                        V.end = rep(NA, mylen),
+                        D.start = rep(NA, mylen),
+                        D.end = rep(NA, mylen),
+                        J.start = rep(NA, mylen),
+                        VJ.ins = rep(NA, mylen),
+                        VD.ins = rep(NA, mylen),
+                        DJ.in = rep(NA, mylen),
+                        Sequence = rep(NA, mylen))
+
+L0CD8 = courgette
+L0CD8$Clones = QULCD8b0fivethousand_1$Count
+L0CD8$CDR3.aa = QULCD8b0fivethousand_1$CDR3
+L0CD8 = as_tibble(L0CD8)
+L0CD8$CDR3.aa <- as.character(L0CD8$CDR3.aa)
+
+####
+
+######
+mylen <- length(row_number(QUECD8b0fivethousand_1$CDR3))
+
+rep(NA, mylen)
+
+courgette <- data.frame(Clones = rep(NA, mylen),
+                        Proportion = rep(NA, mylen),
+                        CDR3.nt = rep(NA, mylen),
+                        CDR3.aa = rep(NA, mylen),
+                        V.name = rep(NA, mylen),
+                        D.name = rep(NA, mylen),
+                        J.name = rep(NA, mylen),
+                        V.end = rep(NA, mylen),
+                        D.start = rep(NA, mylen),
+                        D.end = rep(NA, mylen),
+                        J.start = rep(NA, mylen),
+                        VJ.ins = rep(NA, mylen),
+                        VD.ins = rep(NA, mylen),
+                        DJ.in = rep(NA, mylen),
+                        Sequence = rep(NA, mylen))
+
+E0CD8 = courgette
+E0CD8$Clones = QUECD8b0fivethousand_1$Count
+E0CD8$CDR3.aa = QUECD8b0fivethousand_1$CDR3
+E0CD8 = as_tibble(E0CD8)
+E0CD8$CDR3.aa <- as.character(E0CD8$CDR3.aa)
+
+####
+######
+mylen <- length(row_number(QUKCD8b150fivethousand_1$CDR3))
+
+rep(NA, mylen)
+
+courgette <- data.frame(Clones = rep(NA, mylen),
+                        Proportion = rep(NA, mylen),
+                        CDR3.nt = rep(NA, mylen),
+                        CDR3.aa = rep(NA, mylen),
+                        V.name = rep(NA, mylen),
+                        D.name = rep(NA, mylen),
+                        J.name = rep(NA, mylen),
+                        V.end = rep(NA, mylen),
+                        D.start = rep(NA, mylen),
+                        D.end = rep(NA, mylen),
+                        J.start = rep(NA, mylen),
+                        VJ.ins = rep(NA, mylen),
+                        VD.ins = rep(NA, mylen),
+                        DJ.in = rep(NA, mylen),
+                        Sequence = rep(NA, mylen))
+
+K150CD8 = courgette
+K150CD8$Clones = QUKCD8b150fivethousand_1$Count
+K150CD8$CDR3.aa = QUKCD8b150fivethousand_1$CDR3
+K150CD8 = as_tibble(K150CD8)
+K150CD8$CDR3.aa <- as.character(K150CD8$CDR3.aa)
+
+####
+######
+mylen <- length(row_number(QULCD8b150fivethousand_1$CDR3))
+
+rep(NA, mylen)
+
+courgette <- data.frame(Clones = rep(NA, mylen),
+                        Proportion = rep(NA, mylen),
+                        CDR3.nt = rep(NA, mylen),
+                        CDR3.aa = rep(NA, mylen),
+                        V.name = rep(NA, mylen),
+                        D.name = rep(NA, mylen),
+                        J.name = rep(NA, mylen),
+                        V.end = rep(NA, mylen),
+                        D.start = rep(NA, mylen),
+                        D.end = rep(NA, mylen),
+                        J.start = rep(NA, mylen),
+                        VJ.ins = rep(NA, mylen),
+                        VD.ins = rep(NA, mylen),
+                        DJ.in = rep(NA, mylen),
+                        Sequence = rep(NA, mylen))
+
+L150CD8 = courgette
+L150CD8$Clones = QULCD8b150fivethousand_1$Count
+L150CD8$CDR3.aa = QULCD8b150fivethousand_1$CDR3
+L150CD8 = as_tibble(L150CD8)
+L150CD8$CDR3.aa <- as.character(L150CD8$CDR3.aa)
+
+####
+
+######
+mylen <- length(row_number(QUECD8b0fivethousand_1$CDR3))
+
+rep(NA, mylen)
+
+courgette <- data.frame(Clones = rep(NA, mylen),
+                        Proportion = rep(NA, mylen),
+                        CDR3.nt = rep(NA, mylen),
+                        CDR3.aa = rep(NA, mylen),
+                        V.name = rep(NA, mylen),
+                        D.name = rep(NA, mylen),
+                        J.name = rep(NA, mylen),
+                        V.end = rep(NA, mylen),
+                        D.start = rep(NA, mylen),
+                        D.end = rep(NA, mylen),
+                        J.start = rep(NA, mylen),
+                        VJ.ins = rep(NA, mylen),
+                        VD.ins = rep(NA, mylen),
+                        DJ.in = rep(NA, mylen),
+                        Sequence = rep(NA, mylen))
+
+E150CD8 = courgette
+E150CD8$Clones = QUECD8b0fivethousand_1$Count
+E150CD8$CDR3.aa = QUECD8b0fivethousand_1$CDR3
+E150CD8 = as_tibble(E150CD8)
+E150CD8$CDR3.aa <- as.character(E150CD8$CDR3.aa)
+
+
+# beginning and end
+data <- list( K0CD8 = K0CD8, K150CD8 = K150CD8, L0CD8 = L0CD8, L150CD8 = L150CD8, E0CD8 = E0CD8, E150CD8 = E150CD8)
+# nested lists
+CD8betaBeginningAndEnd <- list(data = data, meta = metadata_beta_CD8)#all the alpha CT CD4 samples over 1000 reads
+
+repClonality(CD8betaBeginningAndEnd$data, "homeo") %>% vis()
+
+ggsave("CD8beta1.pdf", width = 25, height = 15, units = c('cm'))
+
+####
+```
+
+```{r}
+immalpha= repClonality(CD8betaBeginningAndEnd$data, "homeo")
+p1 = vis(.data = immalpha, .by = c("Status", "Week"), .meta = CD8betaBeginningAndEnd$meta, .test = TRUE, .plot = "box")
+p1
+```
+

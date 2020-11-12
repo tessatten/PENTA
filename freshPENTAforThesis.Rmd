@@ -1,0 +1,58 @@
+---
+title: "PENTA for thesis"
+author: "Tess Attenborough"
+date: "19/06/2020"
+output: html_document
+---
+
+shared diversity plots
+```{r}
+PENTAfactsNoLow = subset(PENTAfacts, subset=(PENTAfacts$Number.of.reads > 999))
+
+PENTAfactsCD4 = subset(PENTAfactsNoLow, subset=(PENTAfactsNoLow$Cell.type=="CD4"))
+PENTAfactsCD8 = subset(PENTAfactsNoLow, subset=(PENTAfactsNoLow$Cell.type=="CD8"))
+
+PENTAfactsCD4alpha = subset(PENTAfactsCD4, subset=(PENTAfactsCD4$Chain=="a"))
+PENTAfactsCD4beta = subset(PENTAfactsCD4, subset=(PENTAfactsCD4$Chain=="b"))
+
+PENTAfactsCD8alpha = subset(PENTAfactsCD8, subset=(PENTAfactsCD8$Chain=="a"))
+PENTAfactsCD8beta = subset(PENTAfactsCD8, subset=(PENTAfactsCD8$Chain=="b"))
+
+
+#QUK
+#gini 
+
+PENTAfactsCD4alpha$Week <- as.factor(PENTAfactsCD4alpha$Week)
+head(PENTAfactsCD4alpha)
+
+p <- ggplot(PENTAfactsCD4alpha, aes(x=Week, y=Gini.coefficient)) + 
+  geom_boxplot()+ geom_dotplot(binaxis='y', stackdir='center', dotsize=1)
+p
+
+
+
+p = ggplot(PENTAfactsCD4, aes(x=PENTAfactsCD4$Week, y=PENTAfactsCD4$Gini.coefficient, color=PENTAfactsCD4$Chain, fill=PENTAfactsCD4$Chain)) +
+  geom_boxplot(outlier.colour="black", outlier.shape=16,
+             outlier.size=2, notch=FALSE) + theme(axis.title.x = element_text(size=5),
+                                axis.text.x  = element_text(angle=90, vjust=0.5, size=5)) + 
+  labs(title = "Gini coefficient (CD4 cells alpha chain)", x = "Week", y = "Gini coefficient", color = "Chain") +
+  scale_color_manual(labels = c("Alpha", "Beta"), values = c("#E77EA1", "#5FC27D")) +
+  theme_bw() + guides(fill=FALSE)+ theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 26),
+    legend.text = element_text(color = "black", size = 24)
+  )+ geom_line(
+    stat = "identity",
+    position = "identity",
+    inherit.aes = TRUE,size = 2) + coord_cartesian(ylim = c(0, 1))
+p
+ggsave("PENTA_cd4_alpha_gini.pdf", width = 27, height = 20, units = c('cm'))
+
+
+
+
+```
+

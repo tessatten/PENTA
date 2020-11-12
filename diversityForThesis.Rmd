@@ -1,0 +1,1393 @@
+---
+title: "diversity plots for thesis"
+author: "Tess Attenborough"
+date: "19/06/2020"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+library(immunarch)
+library("devtools")
+library("ggplot2")
+library("vegan")
+library("ineq")
+library("tidyverse")
+library("praise")
+library("scales")
+library("patchwork")
+library("ghibli")
+library("magick")
+library("ggpubr")
+
+
+```
+
+```{r}
+CD4cdrdiversity_table_factors <- CD4cdrdiversity_table #save the div table
+CD4PENTAfactsNoLow = subset(CD4cdrdiversity_table, subset=(CD4cdrdiversity_table_factors$readCount > 999)) #remove the samples with fewer than 1000 reads
+
+CD4PENTAfactsNoLow$week <- as.factor(CD4PENTAfactsNoLow$week) #make weeks into factors
+head(CD4PENTAfactsNoLow)
+
+alpha_CD4cdrdiversity_table <- subset(CD4PENTAfactsNoLow, chain =="a") #just alpha chain
+beta_CD4cdrdiversity_table <- subset(CD4PENTAfactsNoLow, chain =="b")#just beta chain
+
+
+#ghibli_palettes$MarnieMedium1
+#gini and shnnon in cd4 alpha
+p1<-ggplot(alpha_CD4cdrdiversity_table, aes(x=week, y=gini, fill=group)) +
+  geom_boxplot(position=position_dodge(1))+ geom_dotplot(binaxis='y', stackdir='center',
+                 position=position_dodge(1))+
+  labs(title="Gini coefficient (CD4 alpha chain)",x="Week", y = "Gini coefficient", fill = "Group")+  theme_bw()+ scale_fill_manual(labels = c("CT", "PTI"), values = c("#008E90FF", "#F0D77BFF")) + theme(
+    plot.title = element_text(color="black", size=24, face="bold"),
+    axis.title.x = element_text(color="black", size=20, face="bold"),
+    axis.title.y = element_text(color="black", size=20, face="bold"),
+    axis.text=element_text(size=20),
+    legend.title = element_text(color = "black", size = 26),
+    legend.text = element_text(color = "black", size = 24)
+  )+ ylim(0, 0.6)
+p1
+ggsave("PENTA_cd4_alpha_gini.pdf", width = 27, height = 20, units = c('cm'))
+
+p2<-ggplot(alpha_CD4cdrdiversity_table, aes(x=week, y=shannon, fill=group)) +
+  geom_boxplot(position=position_dodge(1))+ geom_dotplot(binaxis='y', stackdir='center',
+                 position=position_dodge(1))+
+  labs(title= 'Shannon entropy (CD4 alpha chain)',x="Week", y = "Shannon entropy", fill = "Group")+  theme_bw()+scale_fill_manual(labels = c("CT", "PTI"), values = c("#5C5992FF", "#B4DAE5FF"))+ theme(
+    plot.title = element_text(color="black", size=24, face="bold"),
+    axis.title.x = element_text(color="black", size=20, face="bold"),
+    axis.title.y = element_text(color="black", size=20, face="bold"),
+    axis.text=element_text(size=20),
+    legend.title = element_text(color = "black", size = 26),
+    legend.text = element_text(color = "black", size = 24)
+  )+ ylim(8, 16)
+p2
+ggsave("PENTA_cd4_alpha_shannon.pdf", width = 27, height = 20, units = c('cm'))
+#title= expression(paste('Shannon entropy (CD4+ ',alpha, ' chain)'))
+#gini and shnnon in cd4 beta 
+p3<-ggplot(beta_CD4cdrdiversity_table, aes(x=week, y=gini, fill=group)) +
+  geom_boxplot(position=position_dodge(1))+ geom_dotplot(binaxis='y', stackdir='center',
+                 position=position_dodge(1))+
+  labs(title="Gini coefficient (CD4 beta chain)",x="Week", y = "Gini coefficient", fill = "Group")+  theme_bw()+ scale_fill_manual(labels = c("CT", "PTI"), values = c("#008E90FF", "#F0D77BFF"))+ theme(
+    plot.title = element_text(color="black", size=24, face="bold"),
+    axis.title.x = element_text(color="black", size=20, face="bold"),
+    axis.title.y = element_text(color="black", size=20, face="bold"),
+    axis.text=element_text(size=20),
+    legend.title = element_text(color = "black", size = 26),
+    legend.text = element_text(color = "black", size = 24)
+  ) + ylim(0, 0.6)
+p3
+ggsave("PENTA_cd4_beta_gini.pdf", width = 27, height = 20, units = c('cm'))
+
+p4<-ggplot(beta_CD4cdrdiversity_table, aes(x=week, y=shannon, fill=group)) +
+  geom_boxplot(position=position_dodge(1))+ geom_dotplot(binaxis='y', stackdir='center',
+                 position=position_dodge(1))+
+  labs(title="Shannon entropy (CD4 beta chain)",x="Week", y = "Shannon entropy", fill = "Group")+  theme_bw()+scale_fill_manual(labels = c("CT", "PTI"), values = c("#5C5992FF", "#B4DAE5FF"))+ theme(
+    plot.title = element_text(color="black", size=24, face="bold"),
+    axis.title.x = element_text(color="black", size=20, face="bold"),
+    axis.title.y = element_text(color="black", size=20, face="bold"),
+    axis.text=element_text(size=20),
+    legend.title = element_text(color = "black", size = 26),
+    legend.text = element_text(color = "black", size = 24)
+  ) + ylim(8, 16)
+p4
+ggsave("PENTA_cd4_betaa_shannon.pdf", width = 27, height = 20, units = c('cm'))
+
+p1 + p3+ p2 + p4 +
+  plot_layout(guides = 'collect')
+
+
+ggsave("PENTA_cd4_diversities.pdf", width = 38, height = 30, units = c('cm'))
+
+```
+
+
+```{r}
+CD8cdrdiversity_table_factors <- CD8cdrdiversity_table #save the div table
+CD8PENTAfactsNoLow = subset(CD8cdrdiversity_table, subset=(CD8cdrdiversity_table$readCount > 999)) #remove the samples with fewer than 1000 reads
+
+CD8PENTAfactsNoLow$week <- as.factor(CD8PENTAfactsNoLow$week) #make weeks into factors
+head(CD8PENTAfactsNoLow)
+
+alpha_CD8cdrdiversity_table <- subset(CD8PENTAfactsNoLow, chain =="a") #just alpha chain
+beta_CD8cdrdiversity_table <- subset(CD8PENTAfactsNoLow, chain =="b")#just beta chain
+
+
+#ghibli_palettes$MarnieMedium1
+#gini and shnnon in cd4 alpha
+p1<-ggplot(alpha_CD8cdrdiversity_table, aes(x=week, y=gini, fill=group)) +
+  geom_boxplot(position=position_dodge(1))+ geom_dotplot(binaxis='y', stackdir='center',
+                 position=position_dodge(1))+
+  labs(title="Gini coefficient (CD8 alpha chain)",x="Week", y = "Gini coefficient", fill = "Group")+  theme_bw()+ scale_fill_manual(labels = c("CT", "PTI"), values = c("#008E90FF", "#F0D77BFF")) + theme(
+    plot.title = element_text(color="black", size=24, face="bold"),
+    axis.title.x = element_text(color="black", size=20, face="bold"),
+    axis.title.y = element_text(color="black", size=20, face="bold"),
+    axis.text=element_text(size=20),
+    legend.title = element_text(color = "black", size = 26),
+    legend.text = element_text(color = "black", size = 24)
+  )+ ylim(0, 0.9)
+p1
+ggsave("PENTA_cd8_alpha_gini.pdf", width = 27, height = 20, units = c('cm'))
+
+p2<-ggplot(alpha_CD8cdrdiversity_table, aes(x=week, y=shannon, fill=group)) +
+  geom_boxplot(position=position_dodge(1))+ geom_dotplot(binaxis='y', stackdir='center',
+                 position=position_dodge(1))+
+  labs(title="Shannon entropy (CD8 alpha chain)",x="Week", y = "Shannon entropy", fill = "Group")+  theme_bw()+scale_fill_manual(labels = c("CT", "PTI"), values = c("#5C5992FF", "#B4DAE5FF"))+ theme(
+    plot.title = element_text(color="black", size=24, face="bold"),
+    axis.title.x = element_text(color="black", size=20, face="bold"),
+    axis.title.y = element_text(color="black", size=20, face="bold"),
+    axis.text=element_text(size=20),
+    legend.title = element_text(color = "black", size = 26),
+    legend.text = element_text(color = "black", size = 24)
+  )+ ylim(6, 13.5)
+p2
+ggsave("PENTA_cd8_alpha_shannon.pdf", width = 27, height = 20, units = c('cm'))
+
+#gini and shnnon in cd4 beta 
+p3<-ggplot(beta_CD8cdrdiversity_table, aes(x=week, y=gini, fill=group)) +
+  geom_boxplot(position=position_dodge(1))+ geom_dotplot(binaxis='y', stackdir='center',
+                 position=position_dodge(1))+
+  labs(title="Gini coefficient (CD8 beta chain)",x="Week", y = "Gini coefficient", fill = "Group")+  theme_bw()+ scale_fill_manual(labels = c("CT", "PTI"), values = c("#008E90FF", "#F0D77BFF"))+ theme(
+    plot.title = element_text(color="black", size=24, face="bold"),
+    axis.title.x = element_text(color="black", size=20, face="bold"),
+    axis.title.y = element_text(color="black", size=20, face="bold"),
+    axis.text=element_text(size=20),
+    legend.title = element_text(color = "black", size = 26),
+    legend.text = element_text(color = "black", size = 24)
+  ) + ylim(0, 0.9)
+p3
+ggsave("PENTA_cd8_beta_gini.pdf", width = 27, height = 20, units = c('cm'))
+
+p4<-ggplot(beta_CD8cdrdiversity_table, aes(x=week, y=shannon, fill=group)) +
+  geom_boxplot(position=position_dodge(1))+ geom_dotplot(binaxis='y', stackdir='center',
+                 position=position_dodge(1))+
+  labs(title="Shannon entropy (CD8 beta chain)",x="Week", y = "Shannon entropy", fill = "Group")+  theme_bw()+scale_fill_manual(labels = c("CT", "PTI"), values = c("#5C5992FF", "#B4DAE5FF"))+ theme(
+    plot.title = element_text(color="black", size=24, face="bold"),
+    axis.title.x = element_text(color="black", size=20, face="bold"),
+    axis.title.y = element_text(color="black", size=20, face="bold"),
+    axis.text=element_text(size=20),
+    legend.title = element_text(color = "black", size = 26),
+    legend.text = element_text(color = "black", size = 24)
+  ) + ylim(6, 13.5)
+p4
+ggsave("PENTA_cd8_betaa_shannon.pdf", width = 27, height = 20, units = c('cm'))
+
+p1 + p3+ p2 + p4 +
+  plot_layout(guides = 'collect')
+
+
+ggsave("PENTA_cd8_diversities.pdf", width = 38, height = 30, units = c('cm'))
+
+beta_CD8cdrdiversity_table
+median
+```
+
+tracking the top 20 SHARED clonotypes over the whole time in PTI
+```{r}
+#starting with QUK CD4 
+#CD4s
+#select all timepoints from  CD4 alpha
+QUKCD4alpha <- subset(allCD4cdr3ALPHA, subset=(allCD4cdr3ALPHA$ID == "QUKPTIW"))
+QULCD4alpha <- subset(allCD4cdr3ALPHA, subset=(allCD4cdr3ALPHA$ID == "QULPTIW"))
+QUQCD4alpha <- subset(allCD4cdr3ALPHA, subset=(allCD4cdr3ALPHA$ID == "QUQPTIW"))
+QUTCD4alpha <- subset(allCD4cdr3ALPHA, subset=(allCD4cdr3ALPHA$ID == "QUTPTIW"))
+
+#select all timepoints from  CD4 beta
+QUKCD4beta <- subset(allCD4cdr3BETA, subset=(allCD4cdr3BETA$ID == "QUKPTIW"))
+QULCD4beta <- subset(allCD4cdr3BETA, subset=(allCD4cdr3BETA$ID == "QULPTIW"))
+QUQCD4beta <- subset(allCD4cdr3BETA, subset=(allCD4cdr3BETA$ID == "QUQPTIW"))
+QUTCD4beta <- subset(allCD4cdr3BETA, subset=(allCD4cdr3BETA$ID == "QUTPTIW"))
+
+#select all timepoints from  CD8 alpha
+QUKCD8alpha <- subset(allCD8cdr3ALPHA, subset=(allCD8cdr3ALPHA$ID == "QUKPTIW"))
+QULCD8alpha <- subset(allCD8cdr3ALPHA, subset=(allCD8cdr3ALPHA$ID == "QULPTIW"))
+QUQCD8alpha <- subset(allCD8cdr3ALPHA, subset=(allCD8cdr3ALPHA$ID == "QUQPTIW"))
+QUTCD8alpha <- subset(allCD8cdr3ALPHA, subset=(allCD8cdr3ALPHA$ID == "QUTPTIW"))
+
+#select all timepoints from  CD8 beta
+QUKCD8beta <- subset(allCD8cdr3BETA, subset=(allCD8cdr3BETA$ID == "QUKPTIW"))
+QULCD8beta <- subset(allCD8cdr3BETA, subset=(allCD8cdr3BETA$ID == "QULPTIW"))
+QUQCD8beta <- subset(allCD8cdr3BETA, subset=(allCD8cdr3BETA$ID == "QUQPTIW"))
+QUTCD8beta <- subset(allCD8cdr3BETA, subset=(allCD8cdr3BETA$ID == "QUTPTIW"))
+
+#make proportional the frequencies
+#cd4 alpha
+QUKCD4alpha.mod <- QUKCD4alpha
+QUKCD4alpha.mod$V2 <- (100/sum(QUKCD4alpha$V2))*QUKCD4alpha$V2 #turns counts into percentages
+QULCD4alpha.mod <- QULCD4alpha
+QULCD4alpha.mod$V2 <- (100/sum(QULCD4alpha$V2))*QULCD4alpha$V2 #turns counts into percentages
+QUQCD4alpha.mod <- QUQCD4alpha
+QUQCD4alpha.mod$V2 <- (100/sum(QUQCD4alpha$V2))*QUQCD4alpha$V2 #turns counts into percentages
+QUTCD4alpha.mod <- QUTCD4alpha
+QUTCD4alpha.mod$V2 <- (100/sum(QUTCD4alpha$V2))*QUTCD4alpha$V2 #turns counts into percentages
+
+#cd4 beta
+QUKCD4beta.mod <- QUKCD4beta
+QUKCD4beta.mod$V2 <- (100/sum(QUKCD4beta$V2))*QUKCD4beta$V2 #turns counts into percentages
+QULCD4beta.mod <- QULCD4beta
+QULCD4beta.mod$V2 <- (100/sum(QULCD4beta$V2))*QULCD4beta$V2 #turns counts into percentages
+QUQCD4beta.mod <- QUQCD4beta
+QUQCD4beta.mod$V2 <- (100/sum(QUQCD4beta$V2))*QUQCD4beta$V2 #turns counts into percentages
+QUTCD4beta.mod <- QUTCD4beta
+QUTCD4beta.mod$V2 <- (100/sum(QUTCD4beta$V2))*QUTCD4beta$V2 #turns counts into percentages
+
+#cd8 alpha
+QUKCD8alpha.mod <- QUKCD8alpha
+QUKCD8alpha.mod$V2 <- (100/sum(QUKCD8alpha$V2))*QUKCD8alpha$V2 #turns counts into percentages
+QULCD8alpha.mod <- QULCD8alpha
+QULCD8alpha.mod$V2 <- (100/sum(QULCD8alpha$V2))*QULCD8alpha$V2 #turns counts into percentages
+QUQCD8alpha.mod <- QUQCD8alpha
+QUQCD8alpha.mod$V2 <- (100/sum(QUQCD8alpha$V2))*QUQCD8alpha$V2 #turns counts into percentages
+QUTCD8alpha.mod <- QUTCD8alpha
+QUTCD8alpha.mod$V2 <- (100/sum(QUTCD8alpha$V2))*QUTCD8alpha$V2 #turns counts into percentages
+
+#cd8 beta
+QUKCD8beta.mod <- QUKCD8beta
+QUKCD8beta.mod$V2 <- (100/sum(QUKCD8beta$V2))*QUKCD8beta$V2 #turns counts into percentages
+QULCD8beta.mod <- QULCD8beta
+QULCD8beta.mod$V2 <- (100/sum(QULCD8beta$V2))*QULCD8beta$V2 #turns counts into percentages
+QUQCD8beta.mod <- QUQCD8beta
+QUQCD8beta.mod$V2 <- (100/sum(QUQCD8beta$V2))*QUQCD8beta$V2 #turns counts into percentages
+QUTCD8beta.mod <- QUTCD8beta
+QUTCD8beta.mod$V2 <- (100/sum(QUTCD8beta$V2))*QUTCD8beta$V2 #turns counts into percentages
+
+#now we remove the non-unique clonotypes from each
+#QUKCD4alpha.mod
+QUKCD4alphanouniques = QUKCD4alpha.mod[duplicated(QUKCD4alpha.mod$V1)|duplicated(QUKCD4alpha.mod$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+#QUKCD4beta.mod
+QUKCD4betanouniques = QUKCD4beta.mod[duplicated(QUKCD4beta.mod$V1)|duplicated(QUKCD4beta.mod$V1, fromLast=T), ]
+
+#QULCD4alpha.mod
+QULCD4alphanouniques = QULCD4alpha.mod[duplicated(QULCD4alpha.mod$V1)|duplicated(QULCD4alpha.mod$V1, fromLast=T), ]
+#QULCD4beta.mod
+QULCD4betanouniques = QULCD4beta.mod[duplicated(QULCD4beta.mod$V1)|duplicated(QULCD4beta.mod$V1, fromLast=T), ]
+
+#QUQCD4alpha.mod
+QUQCD4alphanouniques = QUQCD4alpha.mod[duplicated(QUQCD4alpha.mod$V1)|duplicated(QUQCD4alpha.mod$V1, fromLast=T), ]
+#QUQCD4beta.mod
+QUQCD4betanouniques = QUQCD4beta.mod[duplicated(QUQCD4beta.mod$V1)|duplicated(QUQCD4beta.mod$V1, fromLast=T), ]
+
+#QUTCD4alpha.mod
+QUTCD4alphanouniques = QUTCD4alpha.mod[duplicated(QUTCD4alpha.mod$V1)|duplicated(QUTCD4alpha.mod$V1, fromLast=T), ]
+#QUTCD4beta.mod
+QUTCD4betanouniques = QUTCD4beta.mod[duplicated(QUTCD4beta.mod$V1)|duplicated(QUTCD4beta.mod$V1, fromLast=T), ]
+
+#CD8s
+#QUKCD8alpha.mod
+QUKCD8alphanouniques = QUKCD8alpha.mod[duplicated(QUKCD8alpha.mod$V1)|duplicated(QUKCD8alpha.mod$V1, fromLast=T), ]
+#QUKCD8beta.mod
+QUKCD8betanouniques = QUKCD8beta.mod[duplicated(QUKCD8beta.mod$V1)|duplicated(QUKCD8beta.mod$V1, fromLast=T), ]
+
+#QULCD8alpha.mod
+QULCD8alphanouniques = QULCD8alpha.mod[duplicated(QULCD8alpha.mod$V1)|duplicated(QULCD8alpha.mod$V1, fromLast=T), ]
+#QULCD8beta.mod
+QULCD8betanouniques = QULCD8beta.mod[duplicated(QULCD8beta.mod$V1)|duplicated(QULCD8beta.mod$V1, fromLast=T), ]
+
+#QUQCD8alpha.mod
+QUQCD8alphanouniques = QUQCD8alpha.mod[duplicated(QUQCD8alpha.mod$V1)|duplicated(QUQCD8alpha.mod$V1, fromLast=T), ]
+#QUQCD8beta.mod
+QUQCD8betanouniques = QUQCD8beta.mod[duplicated(QUQCD8beta.mod$V1)|duplicated(QUQCD8beta.mod$V1, fromLast=T), ]
+
+#QUTCD8alpha.mod
+QUTCD8alphanouniques = QUTCD8alpha.mod[duplicated(QUTCD8alpha.mod$V1)|duplicated(QUTCD8alpha.mod$V1, fromLast=T), ]
+#QUTCD8beta.mod
+QUTCD8betanouniques = QUTCD8beta.mod[duplicated(QUTCD8beta.mod$V1)|duplicated(QUTCD8beta.mod$V1, fromLast=T), ]
+
+##################################################################################
+
+```
+
+now get the % of the CTs too
+```{r}
+
+#select all timepoints from  CD4 alpha
+QUDCD4alpha <- subset(allCD4cdr3ALPHA, subset=(allCD4cdr3ALPHA$ID == "QUDCTW"))
+QUECD4alpha <- subset(allCD4cdr3ALPHA, subset=(allCD4cdr3ALPHA$ID == "QUECTW"))
+QUFCD4alpha <- subset(allCD4cdr3ALPHA, subset=(allCD4cdr3ALPHA$ID == "QUFCTW"))
+QUPCD4alpha <- subset(allCD4cdr3ALPHA, subset=(allCD4cdr3ALPHA$ID == "QUPCTW"))
+QUVCD4alpha <- subset(allCD4cdr3ALPHA, subset=(allCD4cdr3ALPHA$ID == "QUVCTW"))
+
+#select all timepoints from  CD4 beta
+QUDCD4beta <- subset(allCD4cdr3BETA, subset=(allCD4cdr3BETA$ID == "QUDCTW"))
+QUECD4beta <- subset(allCD4cdr3BETA, subset=(allCD4cdr3BETA$ID == "QUECTW"))
+QUFCD4beta <- subset(allCD4cdr3BETA, subset=(allCD4cdr3BETA$ID == "QUFCTW"))
+QUPCD4beta <- subset(allCD4cdr3BETA, subset=(allCD4cdr3BETA$ID == "QUPCTW"))
+QUVCD4beta <- subset(allCD4cdr3BETA, subset=(allCD4cdr3BETA$ID == "QUVCTW"))
+
+#select all timepoints from  CD8 alpha
+QUECD8alpha <- subset(allCD8cdr3ALPHA, subset=(allCD8cdr3ALPHA$ID == "QUECTW"))
+QUFCD8alpha <- subset(allCD8cdr3ALPHA, subset=(allCD8cdr3ALPHA$ID == "QUFCTW"))
+QUPCD8alpha <- subset(allCD8cdr3ALPHA, subset=(allCD8cdr3ALPHA$ID == "QUPCTW"))
+QUVCD8alpha <- subset(allCD8cdr3ALPHA, subset=(allCD8cdr3ALPHA$ID == "QUVCTW"))
+
+#select all timepoints from  CD8 beta
+QUECD8beta <- subset(allCD8cdr3BETA, subset=(allCD8cdr3BETA$ID == "QUECTW"))
+QUFCD8beta <- subset(allCD8cdr3BETA, subset=(allCD8cdr3BETA$ID == "QUFCTW"))
+QUPCD8beta <- subset(allCD8cdr3BETA, subset=(allCD8cdr3BETA$ID == "QUPCTW"))
+QUVCD8beta <- subset(allCD8cdr3BETA, subset=(allCD8cdr3BETA$ID == "QUVCTW"))
+
+#make proportional the frequencies
+#cd4 alpha
+QUDCD4alpha.mod <- QUDCD4alpha
+QUDCD4alpha.mod$V2 <- (100/sum(QUDCD4alpha$V2))*QUDCD4alpha$V2 #turns counts into percentages
+QUECD4alpha.mod <- QUECD4alpha
+QUECD4alpha.mod$V2 <- (100/sum(QUECD4alpha$V2))*QUECD4alpha$V2 #turns counts into percentages
+QUFCD4alpha.mod <- QUFCD4alpha
+QUFCD4alpha.mod$V2 <- (100/sum(QUFCD4alpha$V2))*QUFCD4alpha$V2 #turns counts into percentages
+QUPCD4alpha.mod <- QUPCD4alpha
+QUPCD4alpha.mod$V2 <- (100/sum(QUPCD4alpha$V2))*QUPCD4alpha$V2 #turns counts into percentages
+QUVCD4alpha.mod <- QUVCD4alpha
+QUVCD4alpha.mod$V2 <- (100/sum(QUVCD4alpha$V2))*QUVCD4alpha$V2 #turns counts into percentages
+
+#cd4 beta
+QUDCD4beta.mod <- QUDCD4beta
+QUDCD4beta.mod$V2 <- (100/sum(QUDCD4beta$V2))*QUDCD4beta$V2 #turns counts into percentages
+QUECD4beta.mod <- QUECD4beta
+QUECD4beta.mod$V2 <- (100/sum(QUECD4beta$V2))*QUECD4beta$V2 #turns counts into percentages
+QUFCD4beta.mod <- QUFCD4beta
+QUFCD4beta.mod$V2 <- (100/sum(QUFCD4beta$V2))*QUFCD4beta$V2 #turns counts into percentages
+QUPCD4beta.mod <- QUPCD4beta
+QUPCD4beta.mod$V2 <- (100/sum(QUPCD4beta$V2))*QUPCD4beta$V2 #turns counts into percentages
+QUVCD4beta.mod <- QUVCD4beta
+QUVCD4beta.mod$V2 <- (100/sum(QUVCD4beta$V2))*QUVCD4beta$V2 #turns counts into percentages
+
+#CD8 alpha
+QUECD8alpha.mod <- QUECD8alpha
+QUECD8alpha.mod$V2 <- (100/sum(QUECD8alpha$V2))*QUECD8alpha$V2 #turns counts into percentages
+QUFCD8alpha.mod <- QUFCD8alpha
+QUFCD8alpha.mod$V2 <- (100/sum(QUFCD8alpha$V2))*QUFCD8alpha$V2 #turns counts into percentages
+QUPCD8alpha.mod <- QUPCD8alpha
+QUPCD8alpha.mod$V2 <- (100/sum(QUPCD8alpha$V2))*QUPCD8alpha$V2 #turns counts into percentages
+QUVCD8alpha.mod <- QUVCD8alpha
+QUVCD8alpha.mod$V2 <- (100/sum(QUVCD8alpha$V2))*QUVCD8alpha$V2 #turns counts into percentages
+
+#CD8 beta
+QUECD8beta.mod <- QUECD8beta
+QUECD8beta.mod$V2 <- (100/sum(QUECD8beta$V2))*QUECD8beta$V2 #turns counts into percentages
+QUFCD8beta.mod <- QUFCD8beta
+QUFCD8beta.mod$V2 <- (100/sum(QUFCD8beta$V2))*QUFCD8beta$V2 #turns counts into percentages
+QUPCD8beta.mod <- QUPCD8beta
+QUPCD8beta.mod$V2 <- (100/sum(QUPCD8beta$V2))*QUPCD8beta$V2 #turns counts into percentages
+QUVCD8beta.mod <- QUVCD8beta
+QUVCD8beta.mod$V2 <- (100/sum(QUVCD8beta$V2))*QUVCD8beta$V2 #turns counts into percentages
+```
+
+
+
+```{r}
+#eg QUKCD4alpha
+
+QUKCD4alpha.modtop10 = QUKCD4alpha.mod %>%
+  group_by(week) %>%
+  top_n(10, V2) #groups results by week, then selects the top 10 clonos in each week
+
+#QUKCD4alpha
+p1 = ggplot(QUKCD4alpha.modtop10, aes(x=QUKCD4alpha.modtop10$week, y=QUKCD4alpha.modtop10$V2, color=QUKCD4alpha.modtop10$V1, fill=QUKCD4alpha.modtop10$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient K: CD4 (alpha chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p1
+ggsave("QUKCD4_alpha_top10_new.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QUKCD4beta
+
+QUKCD4beta.modtop10 = QUKCD4beta.mod %>%
+  group_by(week) %>%
+  top_n(10, V2) #groups results by week, then selects the top 10 clonos in each week
+
+#QUKCD4alpha
+p2 = ggplot(QUKCD4beta.modtop10, aes(x=QUKCD4beta.modtop10$week, y=QUKCD4beta.modtop10$V2, color=QUKCD4beta.modtop10$V1, fill=QUKCD4beta.modtop10$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient K: CD4 (beta chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p2
+ggsave("QUKCD4_beta_top10_new.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QUKCD8alpha
+
+QUKCD8alpha.modtop10 = QUKCD8alpha.mod %>%
+  group_by(week) %>%
+  top_n(10, V2) #groups results by week, then selects the top 10 clonos in each week
+
+#QUKCD8alpha
+p3 = ggplot(QUKCD8alpha.modtop10, aes(x=QUKCD8alpha.modtop10$week, y=QUKCD8alpha.modtop10$V2, color=QUKCD8alpha.modtop10$V1, fill=QUKCD8alpha.modtop10$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient K: CD8 (alpha chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p3
+ggsave("QUKCD8_alpha_top10_new.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QUKCD8beta
+
+QUKCD8beta.modtop10 = QUKCD8beta.mod %>%
+  group_by(week) %>%
+  top_n(10, V2) #groups results by week, then selects the top 10 clonos in each week
+
+#QUKCD8alpha
+p4 = ggplot(QUKCD8beta.modtop10, aes(x=QUKCD8beta.modtop10$week, y=QUKCD8beta.modtop10$V2, color=QUKCD8beta.modtop10$V1, fill=QUKCD8beta.modtop10$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient K: CD8 (beta chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p4
+ggsave("QUKCD8_beta_top10_new.pdf", width = 27, height = 20, units = c('cm'))
+
+```
+
+patient L
+```{r}
+#eg QULCD4alpha
+
+QULCD4alpha.modtop10 = QULCD4alpha.mod %>%
+  group_by(week) %>%
+  top_n(10, V2) #groups results by week, then selects the top 10 clonos in each week
+
+#QULCD4alpha
+p5 = ggplot(QULCD4alpha.modtop10, aes(x=QULCD4alpha.modtop10$week, y=QULCD4alpha.modtop10$V2, color=QULCD4alpha.modtop10$V1, fill=QULCD4alpha.modtop10$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient L: CD4 (alpha chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p5
+ggsave("QULCD4_alpha_top10_new.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QULCD4beta
+
+QULCD4beta.modtop10 = QULCD4beta.mod %>%
+  group_by(week) %>%
+  top_n(10, V2) #groups results by week, then selects the top 10 clonos in each week
+
+#QULCD4alpha
+p6 = ggplot(QULCD4beta.modtop10, aes(x=QULCD4beta.modtop10$week, y=QULCD4beta.modtop10$V2, color=QULCD4beta.modtop10$V1, fill=QULCD4beta.modtop10$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient L: CD4 (beta chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p6
+ggsave("QULCD4_beta_top10_new.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QULCD8alpha
+
+QULCD8alpha.modtop10 = QULCD8alpha.mod %>%
+  group_by(week) %>%
+  top_n(10, V2) #groups results by week, then selects the top 10 clonos in each week
+
+#QULCD8alpha
+p7 = ggplot(QULCD8alpha.modtop10, aes(x=QULCD8alpha.modtop10$week, y=QULCD8alpha.modtop10$V2, color=QULCD8alpha.modtop10$V1, fill=QULCD8alpha.modtop10$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient L: CD8 (alpha chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p7
+ggsave("QULCD8_alpha_top10_new.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QULCD8beta
+
+QULCD8beta.modtop10 = QULCD8beta.mod %>%
+  group_by(week) %>%
+  top_n(10, V2) #groups results by week, then selects the top 10 clonos in each week
+
+#QULCD8alpha
+p8 = ggplot(QULCD8beta.modtop10, aes(x=QULCD8beta.modtop10$week, y=QULCD8beta.modtop10$V2, color=QULCD8beta.modtop10$V1, fill=QULCD8beta.modtop10$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient L: CD8 (beta chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p8
+ggsave("QULCD8_beta_top10_new.pdf", width = 27, height = 20, units = c('cm'))
+
+```
+
+
+Patient Q
+```{r}
+#eg QUQCD4alpha
+
+QUQCD4alpha.modtop10 = QUQCD4alpha.mod %>%
+  group_by(week) %>%
+  top_n(10, V2) #groups results by week, then selects the top 10 clonos in each week
+
+#QUQCD4alpha
+p9 = ggplot(QUQCD4alpha.modtop10, aes(x=QUQCD4alpha.modtop10$week, y=QUQCD4alpha.modtop10$V2, color=QUQCD4alpha.modtop10$V1, fill=QUQCD4alpha.modtop10$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient Q: CD4 (alpha chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p9
+ggsave("QUQCD4_alpha_top10_new.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QUQCD4beta
+
+QUQCD4beta.modtop10 = QUQCD4beta.mod %>%
+  group_by(week) %>%
+  top_n(10, V2) #groups results by week, then selects the top 10 clonos in each week
+
+#QUQCD4alpha
+p10 = ggplot(QUQCD4beta.modtop10, aes(x=QUQCD4beta.modtop10$week, y=QUQCD4beta.modtop10$V2, color=QUQCD4beta.modtop10$V1, fill=QUQCD4beta.modtop10$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient Q: CD4 (beta chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)+ scale_x_continuous(limits = c(0, 150))
+p10
+ggsave("QUQCD4_beta_top10_new.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QUQCD8alpha
+
+QUQCD8alpha.modtop10 = QUQCD8alpha.mod %>%
+  group_by(week) %>%
+  top_n(10, V2) #groups results by week, then selects the top 10 clonos in each week
+
+#QUQCD8alpha
+p11 = ggplot(QUQCD8alpha.modtop10, aes(x=QUQCD8alpha.modtop10$week, y=QUQCD8alpha.modtop10$V2, color=QUQCD8alpha.modtop10$V1, fill=QUQCD8alpha.modtop10$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient Q: CD8 (alpha chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p11
+ggsave("QUQCD8_alpha_top10_new.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QUQCD8beta
+
+QUQCD8beta.modtop10 = QUQCD8beta.mod %>%
+  group_by(week) %>%
+  top_n(10, V2) #groups results by week, then selects the top 10 clonos in each week
+
+#QUQCD8alpha
+p12 = ggplot(QUQCD8beta.modtop10, aes(x=QUQCD8beta.modtop10$week, y=QUQCD8beta.modtop10$V2, color=QUQCD8beta.modtop10$V1, fill=QUQCD8beta.modtop10$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient Q: CD8 (beta chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p12
+ggsave("QUQCD8_beta_top10_new.pdf", width = 27, height = 20, units = c('cm'))
+
+```
+
+
+paitnet T
+```{r}
+#eg QUTCD4alpha
+
+QUTCD4alpha.modtop10 = QUTCD4alpha.mod %>%
+  group_by(week) %>%
+  top_n(10, V2) #groups results by week, then selects the top 10 clonos in each week
+
+#QUTCD4alpha
+p13 = ggplot(QUTCD4alpha.modtop10, aes(x=QUTCD4alpha.modtop10$week, y=QUTCD4alpha.modtop10$V2, color=QUTCD4alpha.modtop10$V1, fill=QUTCD4alpha.modtop10$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient T: CD4 (alpha chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p13
+ggsave("QUTCD4_alpha_top10_new.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QUTCD4beta
+
+QUTCD4beta.modtop10 = QUTCD4beta.mod %>%
+  group_by(week) %>%
+  top_n(10, V2) #groups results by week, then selects the top 10 clonos in each week
+
+#QUTCD4alpha
+p14 = ggplot(QUTCD4beta.modtop10, aes(x=QUTCD4beta.modtop10$week, y=QUTCD4beta.modtop10$V2, color=QUTCD4beta.modtop10$V1, fill=QUTCD4beta.modtop10$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient T: CD4 (beta chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p14
+ggsave("QUTCD4_beta_top10_new.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QUTCD8alpha
+
+QUTCD8alpha.modtop10 = QUTCD8alpha.mod %>%
+  group_by(week) %>%
+  top_n(10, V2) #groups results by week, then selects the top 10 clonos in each week
+
+#QUTCD8alpha
+p15 = ggplot(QUTCD8alpha.modtop10, aes(x=QUTCD8alpha.modtop10$week, y=QUTCD8alpha.modtop10$V2, color=QUTCD8alpha.modtop10$V1, fill=QUTCD8alpha.modtop10$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient T: CD8 (alpha chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p15
+ggsave("QUTCD8_alpha_top10_new.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QUTCD8beta
+
+QUTCD8beta.modtop10 = QUTCD8beta.mod %>%
+  group_by(week) %>%
+  top_n(10, V2) #groups results by week, then selects the top 10 clonos in each week
+
+#QUTCD8alpha
+p16 = ggplot(QUTCD8beta.modtop10, aes(x=QUTCD8beta.modtop10$week, y=QUTCD8beta.modtop10$V2, color=QUTCD8beta.modtop10$V1, fill=QUTCD8beta.modtop10$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient T: CD8 (beta chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p16
+ggsave("QUTCD8_beta_top10_new.pdf", width = 27, height = 20, units = c('cm'))
+
+```
+
+
+
+make them into patchworks
+```{r}
+p1 + p5+ p9 + p13 +
+  plot_layout(guides = 'collect')
+
+
+ggsave("top10_cd4_alpha.pdf", width = 38, height = 30, units = c('cm'))
+
+p2 + p6+ p10 + p14 +
+  plot_layout(guides = 'collect')
+
+
+ggsave("top10_cd4_beta.pdf", width = 38, height = 30, units = c('cm'))
+
+p3 + p7+ p11 + p15 +
+  plot_layout(guides = 'collect')
+
+
+ggsave("top10_cd8_alpha.pdf", width = 38, height = 30, units = c('cm'))
+
+p4 + p8+ p12 + p16 +
+  plot_layout(guides = 'collect')
+
+
+ggsave("top10_cd8_beta.pdf", width = 38, height = 30, units = c('cm'))
+```
+
+now i want to make comparison week 0 and 150 with pti and ct
+
+```{r}
+#eg QUKCD4alpha
+
+QUKCD4alpha.mod0150 <- dplyr::filter(QUKCD4alpha.mod, week == 0 | week == 150)
+table(QUKCD4alpha.mod0150$week)
+
+temo = QUKCD4alpha.mod0150[duplicated(QUKCD4alpha.mod0150$V1)|duplicated(QUKCD4alpha.mod0150$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+nrow(temo)/2
+
+
+#QUKCD4alpha
+p1 = ggplot(QUKCD4alpha.mod0150, aes(x=QUKCD4alpha.mod0150$week, y=QUKCD4alpha.mod0150$V2, color=QUKCD4alpha.mod0150$V1, fill=QUKCD4alpha.mod0150$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient K: CD4 (alpha chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p1
+ggsave("QUKCD4_alpha_topStart.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QUKCD4beta
+
+QUKCD4beta.mod0150 <- dplyr::filter(QUKCD4beta.mod, week == 0 | week == 150)
+table(QUKCD4beta.mod0150$week)
+temo = QUKCD4beta.mod0150[duplicated(QUKCD4beta.mod0150$V1)|duplicated(QUKCD4beta.mod0150$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+nrow(temo)/2
+
+#QUKCD4alpha
+p2 = ggplot(QUKCD4beta.mod0150, aes(x=QUKCD4beta.mod0150$week, y=QUKCD4beta.mod0150$V2, color=QUKCD4beta.mod0150$V1, fill=QUKCD4beta.mod0150$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient K: CD4 (beta chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p2
+ggsave("QUKCD4_beta_topStart.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QUKCD8alpha
+
+QUKCD8alpha.mod0150 <- dplyr::filter(QUKCD8alpha.mod, week == 0 | week == 150)
+table(QUKCD8alpha.mod0150$week)
+temo = QUKCD8alpha.mod0150[duplicated(QUKCD8alpha.mod0150$V1)|duplicated(QUKCD8alpha.mod0150$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+nrow(temo)/2
+
+#QUKCD8alpha
+p3 = ggplot(QUKCD8alpha.mod0150, aes(x=QUKCD8alpha.mod0150$week, y=QUKCD8alpha.mod0150$V2, color=QUKCD8alpha.mod0150$V1, fill=QUKCD8alpha.mod0150$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient K: CD8 (alpha chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p3
+ggsave("QUKCD8_alpha_topStart.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QUKCD8beta
+
+QUKCD8beta.mod0150 <- dplyr::filter(QUKCD8beta.mod, week == 0 | week == 150)
+table(QUKCD8beta.mod0150$week)
+temo = QUKCD8beta.mod0150[duplicated(QUKCD8beta.mod0150$V1)|duplicated(QUKCD8beta.mod0150$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+nrow(temo)/2
+
+#QUKCD8alpha
+p4 = ggplot(QUKCD8beta.mod0150, aes(x=QUKCD8beta.mod0150$week, y=QUKCD8beta.mod0150$V2, color=QUKCD8beta.mod0150$V1, fill=QUKCD8beta.mod0150$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient K: CD8 (beta chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p4
+ggsave("QUKCD8_beta_topStart.pdf", width = 27, height = 20, units = c('cm'))
+
+```
+
+```{r}
+#eg QULCD4alpha
+
+QULCD4alpha.mod0150 <- dplyr::filter(QULCD4alpha.mod, week == 0 | week == 150)
+table(QULCD4alpha.mod0150$week)
+
+temo = QULCD4alpha.mod0150[duplicated(QULCD4alpha.mod0150$V1)|duplicated(QULCD4alpha.mod0150$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+nrow(temo)/2
+
+
+#QULCD4alpha
+p1 = ggplot(QULCD4alpha.mod0150, aes(x=QULCD4alpha.mod0150$week, y=QULCD4alpha.mod0150$V2, color=QULCD4alpha.mod0150$V1, fill=QULCD4alpha.mod0150$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient L: CD4 (alpha chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p1
+ggsave("QULCD4_alpha_topStart.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QULCD4beta
+
+QULCD4beta.mod0150 <- dplyr::filter(QULCD4beta.mod, week == 0 | week == 150)
+table(QULCD4beta.mod0150$week)
+temo = QULCD4beta.mod0150[duplicated(QULCD4beta.mod0150$V1)|duplicated(QULCD4beta.mod0150$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+nrow(temo)/2
+
+#QULCD4alpha
+p2 = ggplot(QULCD4beta.mod0150, aes(x=QULCD4beta.mod0150$week, y=QULCD4beta.mod0150$V2, color=QULCD4beta.mod0150$V1, fill=QULCD4beta.mod0150$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient L: CD4 (beta chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p2
+ggsave("QULCD4_beta_topStart.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QULCD8alpha
+
+QULCD8alpha.mod0150 <- dplyr::filter(QULCD8alpha.mod, week == 0 | week == 150)
+table(QULCD8alpha.mod0150$week)
+temo = QULCD8alpha.mod0150[duplicated(QULCD8alpha.mod0150$V1)|duplicated(QULCD8alpha.mod0150$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+nrow(temo)/2
+
+#QULCD8alpha
+p3 = ggplot(QULCD8alpha.mod0150, aes(x=QULCD8alpha.mod0150$week, y=QULCD8alpha.mod0150$V2, color=QULCD8alpha.mod0150$V1, fill=QULCD8alpha.mod0150$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient L: CD8 (alpha chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p3
+ggsave("QULCD8_alpha_topStart.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QULCD8beta
+
+QULCD8beta.mod0150 <- dplyr::filter(QULCD8beta.mod, week == 0 | week == 150)
+table(QULCD8beta.mod0150$week)
+temo = QULCD8beta.mod0150[duplicated(QULCD8beta.mod0150$V1)|duplicated(QULCD8beta.mod0150$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+nrow(temo)/2
+
+#QULCD8alpha
+p4 = ggplot(QULCD8beta.mod0150, aes(x=QULCD8beta.mod0150$week, y=QULCD8beta.mod0150$V2, color=QULCD8beta.mod0150$V1, fill=QULCD8beta.mod0150$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient L: CD8 (beta chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p4
+ggsave("QULCD8_beta_topStart.pdf", width = 27, height = 20, units = c('cm'))
+
+```
+
+```{r}
+#eg QUQCD4alpha
+
+QUQCD4alpha.mod0150 <- dplyr::filter(QUQCD4alpha.mod, week == 0 | week == 150)
+table(QUQCD4alpha.mod0150$week)
+
+temo = QUQCD4alpha.mod0150[duplicated(QUQCD4alpha.mod0150$V1)|duplicated(QUQCD4alpha.mod0150$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+nrow(temo)/2
+
+
+#QUQCD4alpha
+p1 = ggplot(QUQCD4alpha.mod0150, aes(x=QUQCD4alpha.mod0150$week, y=QUQCD4alpha.mod0150$V2, color=QUQCD4alpha.mod0150$V1, fill=QUQCD4alpha.mod0150$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient Q: CD4 (alpha chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p1
+ggsave("QUQCD4_alpha_topStart.pdf", width = 27, height = 20, units = c('cm'))
+
+
+
+#eg QUQCD8alpha
+
+QUQCD8alpha.mod0150 <- dplyr::filter(QUQCD8alpha.mod, week == 0 | week == 150)
+table(QUQCD8alpha.mod0150$week)
+temo = QUQCD8alpha.mod0150[duplicated(QUQCD8alpha.mod0150$V1)|duplicated(QUQCD8alpha.mod0150$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+nrow(temo)/2
+
+#QUQCD8alpha
+p3 = ggplot(QUQCD8alpha.mod0150, aes(x=QUQCD8alpha.mod0150$week, y=QUQCD8alpha.mod0150$V2, color=QUQCD8alpha.mod0150$V1, fill=QUQCD8alpha.mod0150$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient Q: CD8 (alpha chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p3
+ggsave("QUQCD8_alpha_topStart.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QUQCD8beta
+
+QUQCD8beta.mod0150 <- dplyr::filter(QUQCD8beta.mod, week == 0 | week == 150)
+table(QUQCD8beta.mod0150$week)
+temo = QUQCD8beta.mod0150[duplicated(QUQCD8beta.mod0150$V1)|duplicated(QUQCD8beta.mod0150$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+nrow(temo)/2
+
+#QUQCD8alpha
+p4 = ggplot(QUQCD8beta.mod0150, aes(x=QUQCD8beta.mod0150$week, y=QUQCD8beta.mod0150$V2, color=QUQCD8beta.mod0150$V1, fill=QUQCD8beta.mod0150$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient Q: CD8 (beta chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p4
+ggsave("QUQCD8_beta_topStart.pdf", width = 27, height = 20, units = c('cm'))
+
+```
+
+```{r}
+#eg QUTCD4alpha
+
+QUTCD4alpha.mod0150 <- dplyr::filter(QUTCD4alpha.mod, week == 0 | week == 150)
+table(QUTCD4alpha.mod0150$week)
+
+temo = QUTCD4alpha.mod0150[duplicated(QUTCD4alpha.mod0150$V1)|duplicated(QUTCD4alpha.mod0150$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+nrow(temo)/2
+
+
+#QUTCD4alpha
+p1 = ggplot(QUTCD4alpha.mod0150, aes(x=QUTCD4alpha.mod0150$week, y=QUTCD4alpha.mod0150$V2, color=QUTCD4alpha.mod0150$V1, fill=QUTCD4alpha.mod0150$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient T: CD4 (alpha chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p1
+ggsave("QUTCD4_alpha_topStart.pdf", width = 27, height = 20, units = c('cm'))
+
+
+
+#eg QUTCD8alpha
+
+QUTCD8alpha.mod0150 <- dplyr::filter(QUTCD8alpha.mod, week == 0 | week == 150)
+table(QUTCD8alpha.mod0150$week)
+temo = QUTCD8alpha.mod0150[duplicated(QUTCD8alpha.mod0150$V1)|duplicated(QUTCD8alpha.mod0150$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+nrow(temo)/2
+
+#QUTCD8alpha
+p3 = ggplot(QUTCD8alpha.mod0150, aes(x=QUTCD8alpha.mod0150$week, y=QUTCD8alpha.mod0150$V2, color=QUTCD8alpha.mod0150$V1, fill=QUTCD8alpha.mod0150$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient T: CD8 (alpha chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p3
+ggsave("QUTCD8_alpha_topStart.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QUTCD8beta
+
+QUTCD8beta.mod0150 <- dplyr::filter(QUTCD8beta.mod, week == 0 | week == 150)
+table(QUTCD8beta.mod0150$week)
+temo = QUTCD8beta.mod0150[duplicated(QUTCD8beta.mod0150$V1)|duplicated(QUTCD8beta.mod0150$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+nrow(temo)/2
+
+#QUTCD8alpha
+p4 = ggplot(QUTCD8beta.mod0150, aes(x=QUTCD8beta.mod0150$week, y=QUTCD8beta.mod0150$V2, color=QUTCD8beta.mod0150$V1, fill=QUTCD8beta.mod0150$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient T: CD8 (beta chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p4
+ggsave("QUTCD8_beta_topStart.pdf", width = 27, height = 20, units = c('cm'))
+```
+
+```{r}
+#eg QUDCD4beta
+
+QUDCD4beta.mod0150 <- dplyr::filter(QUDCD4beta.mod, week == 0 | week == 150)
+table(QUDCD4beta.mod0150$week)
+temo = QUDCD4beta.mod0150[duplicated(QUDCD4beta.mod0150$V1)|duplicated(QUDCD4beta.mod0150$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+nrow(temo)/2
+
+#QUDCD4alpha
+p2 = ggplot(QUDCD4beta.mod0150, aes(x=QUDCD4beta.mod0150$week, y=QUDCD4beta.mod0150$V2, color=QUDCD4beta.mod0150$V1, fill=QUDCD4beta.mod0150$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient D: CD4 (beta chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p2
+ggsave("QUDCD4_beta_topStart.pdf", width = 27, height = 20, units = c('cm'))
+```
+
+```{r}
+
+#eg QUECD4beta
+
+QUECD4beta.mod0150 <- dplyr::filter(QUECD4beta.mod, week == 0 | week == 150)
+table(QUECD4beta.mod0150$week)
+temo = QUECD4beta.mod0150[duplicated(QUECD4beta.mod0150$V1)|duplicated(QUECD4beta.mod0150$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+nrow(temo)/2
+
+#QUECD4alpha
+p2 = ggplot(QUECD4beta.mod0150, aes(x=QUECD4beta.mod0150$week, y=QUECD4beta.mod0150$V2, color=QUECD4beta.mod0150$V1, fill=QUECD4beta.mod0150$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient E: CD4 (beta chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p2
+ggsave("QUECD4_beta_topStart.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QUECD8alpha
+
+QUECD8alpha.mod0150 <- dplyr::filter(QUECD8alpha.mod, week == 0 | week == 150)
+table(QUECD8alpha.mod0150$week)
+temo = QUECD8alpha.mod0150[duplicated(QUECD8alpha.mod0150$V1)|duplicated(QUECD8alpha.mod0150$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+nrow(temo)/2
+
+#QUECD8alpha
+p3 = ggplot(QUECD8alpha.mod0150, aes(x=QUECD8alpha.mod0150$week, y=QUECD8alpha.mod0150$V2, color=QUECD8alpha.mod0150$V1, fill=QUECD8alpha.mod0150$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient E: CD8 (alpha chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p3
+ggsave("QUECD8_alpha_topStart.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QUECD8beta
+
+QUECD8beta.mod0150 <- dplyr::filter(QUECD8beta.mod, week == 0 | week == 150)
+table(QUECD8beta.mod0150$week)
+temo = QUECD8beta.mod0150[duplicated(QUECD8beta.mod0150$V1)|duplicated(QUECD8beta.mod0150$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+nrow(temo)/2
+
+#QUECD8alpha
+p4 = ggplot(QUECD8beta.mod0150, aes(x=QUECD8beta.mod0150$week, y=QUECD8beta.mod0150$V2, color=QUECD8beta.mod0150$V1, fill=QUECD8beta.mod0150$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient E: CD8 (beta chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p4
+ggsave("QUECD8_beta_topStart.pdf", width = 27, height = 20, units = c('cm'))
+```
+
+```{r}
+#eg QUFCD4alpha
+
+QUFCD4alpha.mod0150 <- dplyr::filter(QUFCD4alpha.mod, week == 0 | week == 150)
+table(QUFCD4alpha.mod0150$week)
+
+temo = QUFCD4alpha.mod0150[duplicated(QUFCD4alpha.mod0150$V1)|duplicated(QUFCD4alpha.mod0150$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+nrow(temo)/2
+
+
+#QUFCD4alpha
+p1 = ggplot(QUFCD4alpha.mod0150, aes(x=QUFCD4alpha.mod0150$week, y=QUFCD4alpha.mod0150$V2, color=QUFCD4alpha.mod0150$V1, fill=QUFCD4alpha.mod0150$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient F: CD4 (alpha chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p1
+ggsave("QUFCD4_alpha_topStart.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QUFCD4beta
+
+QUFCD4beta.mod0150 <- dplyr::filter(QUFCD4beta.mod, week == 0 | week == 150)
+table(QUFCD4beta.mod0150$week)
+temo = QUFCD4beta.mod0150[duplicated(QUFCD4beta.mod0150$V1)|duplicated(QUFCD4beta.mod0150$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+nrow(temo)/2
+
+#QUFCD4alpha
+p2 = ggplot(QUFCD4beta.mod0150, aes(x=QUFCD4beta.mod0150$week, y=QUFCD4beta.mod0150$V2, color=QUFCD4beta.mod0150$V1, fill=QUFCD4beta.mod0150$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient F: CD4 (beta chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p2
+ggsave("QUFCD4_beta_topStart.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QUFCD8alpha
+
+QUFCD8alpha.mod0150 <- dplyr::filter(QUFCD8alpha.mod, week == 0 | week == 150)
+table(QUFCD8alpha.mod0150$week)
+temo = QUFCD8alpha.mod0150[duplicated(QUFCD8alpha.mod0150$V1)|duplicated(QUFCD8alpha.mod0150$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+nrow(temo)/2
+
+#QUFCD8alpha
+p3 = ggplot(QUFCD8alpha.mod0150, aes(x=QUFCD8alpha.mod0150$week, y=QUFCD8alpha.mod0150$V2, color=QUFCD8alpha.mod0150$V1, fill=QUFCD8alpha.mod0150$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient F: CD8 (alpha chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p3
+ggsave("QUFCD8_alpha_topStart.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QUFCD8beta
+
+QUFCD8beta.mod0150 <- dplyr::filter(QUFCD8beta.mod, week == 0 | week == 150)
+table(QUFCD8beta.mod0150$week)
+temo = QUFCD8beta.mod0150[duplicated(QUFCD8beta.mod0150$V1)|duplicated(QUFCD8beta.mod0150$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+nrow(temo)/2
+
+#QUFCD8alpha
+p4 = ggplot(QUFCD8beta.mod0150, aes(x=QUFCD8beta.mod0150$week, y=QUFCD8beta.mod0150$V2, color=QUFCD8beta.mod0150$V1, fill=QUFCD8beta.mod0150$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient F: CD8 (beta chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p4
+ggsave("QUFCD8_beta_topStart.pdf", width = 27, height = 20, units = c('cm'))
+```
+
+```{r}
+#eg QUPCD4alpha
+
+QUPCD4alpha.mod0150 <- dplyr::filter(QUPCD4alpha.mod, week == 0 | week == 150)
+table(QUPCD4alpha.mod0150$week)
+
+temo = QUPCD4alpha.mod0150[duplicated(QUPCD4alpha.mod0150$V1)|duplicated(QUPCD4alpha.mod0150$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+nrow(temo)/2
+
+
+#QUPCD4alpha
+p1 = ggplot(QUPCD4alpha.mod0150, aes(x=QUPCD4alpha.mod0150$week, y=QUPCD4alpha.mod0150$V2, color=QUPCD4alpha.mod0150$V1, fill=QUPCD4alpha.mod0150$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient P: CD4 (alpha chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p1
+ggsave("QUPCD4_alpha_topStart.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QUPCD4beta
+
+QUPCD4beta.mod0150 <- dplyr::filter(QUPCD4beta.mod, week == 0 | week == 150)
+table(QUPCD4beta.mod0150$week)
+temo = QUPCD4beta.mod0150[duplicated(QUPCD4beta.mod0150$V1)|duplicated(QUPCD4beta.mod0150$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+nrow(temo)/2
+
+#QUPCD4alpha
+p2 = ggplot(QUPCD4beta.mod0150, aes(x=QUPCD4beta.mod0150$week, y=QUPCD4beta.mod0150$V2, color=QUPCD4beta.mod0150$V1, fill=QUPCD4beta.mod0150$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient P: CD4 (beta chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p2
+ggsave("QUPCD4_beta_topStart.pdf", width = 27, height = 20, units = c('cm'))
+
+
+```
+
+
+```{r}
+#eg QUVCD8alpha
+
+QUVCD8alpha.mod0150 <- dplyr::filter(QUVCD8alpha.mod, week == 0 | week == 150)
+table(QUVCD8alpha.mod0150$week)
+
+temo = QUVCD8alpha.mod0150[duplicated(QUVCD8alpha.mod0150$V1)|duplicated(QUVCD8alpha.mod0150$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+nrow(temo)/2
+
+
+#QUVCD8alpha
+p1 = ggplot(QUVCD8alpha.mod0150, aes(x=QUVCD8alpha.mod0150$week, y=QUVCD8alpha.mod0150$V2, color=QUVCD8alpha.mod0150$V1, fill=QUVCD8alpha.mod0150$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient V: CD8 (alpha chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p1
+ggsave("QUVCD8_alpha_topStart.pdf", width = 27, height = 20, units = c('cm'))
+
+#eg QUVCD8beta
+
+QUVCD8beta.mod0150 <- dplyr::filter(QUVCD8beta.mod, week == 0 | week == 150)
+table(QUVCD8beta.mod0150$week)
+temo = QUVCD8beta.mod0150[duplicated(QUVCD8beta.mod0150$V1)|duplicated(QUVCD8beta.mod0150$V1, fromLast=T), ] #here is remove any clonos which don't appear in multiple time points
+nrow(temo)/2
+
+#QUVCD8alpha
+p2 = ggplot(QUVCD8beta.mod0150, aes(x=QUVCD8beta.mod0150$week, y=QUVCD8beta.mod0150$V2, color=QUVCD8beta.mod0150$V1, fill=QUVCD8beta.mod0150$V1)) +
+  geom_point(size = 4)+ theme(legend.position="none")+
+  geom_line(aes(color = V1), size = 1) + labs(title = "Patient V: CD8 (beta chain)", x = "Week", y = "Clonotype size (% of sample)", color = "CDR3") +
+  theme_bw() + theme(
+    plot.title = element_text(color="black", size=28, face="bold"),
+    axis.title.x = element_text(color="black", size=28, face="bold"),
+    axis.title.y = element_text(color="black", size=28, face="bold"),
+    axis.text=element_text(size=26),
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 14)
+  ) + guides(fill=FALSE, color=FALSE)
+p2
+ggsave("QUVCD8_beta_topStart.pdf", width = 27, height = 20, units = c('cm'))
+
+
+```
+
+
+
+add images into a ggplot. I want to import the shared % plots
+```{r}
+tweet <- image_read('CD4/K_CD8_beta.pdf')
+tweet <- ggplot() +
+  background_image(tweet) + coord_fixed()
+
+pF <- tweet + (p3/ (p1 + p2))
+pF
+ggsave("hum", width = 27, height = 20, units = c('cm'))
+
+```
+
+
+

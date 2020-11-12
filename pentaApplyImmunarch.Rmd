@@ -1,0 +1,638 @@
+---
+title: "let's apply immunarch"
+author: "Tess Attenborough"
+date: "22/06/2020"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+library(immunarch)
+library("devtools")
+library("ggplot2")
+library("vegan")
+library("ineq")
+library("tidyverse")
+library("praise")
+library("scales")
+library("patchwork")
+library("ghibli")
+
+```
+
+
+clonality by on of off treatment in PTI group:aall
+```{r}
+
+cd4Palette <- c("#E69F00", "#56B4E9")
+cd8Palette <- c("#D55E00","#0072B2")
+
+p1 = vis(.data = immalpha, .by = c("Status", "Week"), .meta = alphaCDR3CD4dataBeginningAndEnd$meta, .test = TRUE, .plot = "box")+   # ghibli stuff
+  scale_fill_ghibli_d("YesterdayMedium", direction = -1)
+p1
+fixVis(p1)
+
+immalpha= repClonality(alphaCDR3CD4dataPTI$data, "homeo")
+immalpha
+p1 = vis(.data = immalpha, .by = "ART", .meta = alphaCDR3CD4dataPTI$meta,  .plot = "box")+scale_fill_manual(values=cd4Palette)
+p1
+fixVis(p1)
+ggsave("alphaCD4byPTIImmune.pdf", width = 35, height = 25, units = c('cm')) #clonality by pti patients on and off treatment
+
+immalpha= repClonality(betaCDR3CD4dataPTI$data, "homeo")
+immalpha
+p2 = vis(.data = immalpha, .by = "ART", .meta = betaCDR3CD4dataPTI$meta)+scale_fill_manual(values=cd4Palette)
+p2
+fixVis(p2)
+ggsave("betaCD4byPTIImmune.pdf", width = 35, height = 25, units = c('cm')) #clonality by pti patients on and off treatment
+
+immalpha= repClonality(alphaCDR3CD8dataPTI$data, "homeo")
+immalpha
+p3 = vis(.data = immalpha, .by = "ART", .meta = alphaCDR3CD8dataPTI$meta)+scale_fill_manual(values=cd8Palette)
+p3
+fixVis(p3)
+ggsave("alphaCD8byPTIImmune.pdf", width = 35, height = 25, units = c('cm')) #clonality by pti patients on and off treatment
+
+immalpha= repClonality(betaCDR3CD8dataPTI$data, "homeo")
+immalpha
+p4 = vis(.data = immalpha, .by = "ART", .meta = betaCDR3CD8dataPTI$meta)+scale_fill_manual(values=cd8Palette)
+p4
+fixVis(p4)
+ggsave("betaCD8byPTIImmune.pdf", width = 35, height = 25, units = c('cm')) #clonality by pti patients on and off treatment
+
+p1 + p2+ p3 + p4 +
+  plot_layout(guides = 'collect')
+vis
+
+ggsave("on_or_off_ART_clonality.pdf", width = 35, height = 45, units = c('cm'))
+```
+
+v and j gene usage in cd4
+```{r}
+##alpha ve gene in CD4
+imm_gu <- geneUsage(alphaVDJCD4data$data, "hs.trav", .norm = T, .quant = "count")
+imm_gu
+vis(imm_gu, .by = "ART", .meta = alphaVDJCD4data$meta)
+ggsave("test1.pdf", width = 55, height = 45, units = c('cm'))
+vis(imm_gu, .by = "ART", .meta = alphaVDJCD4data$meta, .plot = "box")
+ggsave("test2.pdf", width = 55, height = 45, units = c('cm'))
+vis(imm_gu, .by = "ART", .meta = alphaVDJCD4data$meta, .plot = "box")
+ggsave("alphaCD4VbyImmune.pdf", width = 55, height = 45, units = c('cm'))
+
+##beta ve gene in CD4
+imm_gu <- geneUsage(betaVDJCD4data$data, "hs.trbv", .norm = T, .quant = "count")
+imm_gu
+vis(imm_gu, .by = "ART", .meta = betaVDJCD4data$meta, .plot = "box")
+ggsave("betaCD4VbyImmune.pdf", width = 55, height = 45, units = c('cm'))
+
+##alpha j gene in CD4
+imm_gu <- geneUsage(alphaVDJCD4data$data, "hs.traj", .norm = T, .quant = "count")
+imm_gu
+vis(imm_gu, .by = "ART", .meta = alphaVDJCD4data$meta, .plot = "box")
+ggsave("alphaCD4JbyImmune.pdf", width = 55, height = 45, units = c('cm'))
+
+##beta j gene in CD4
+imm_gu <- geneUsage(betaVDJCD4data$data, "hs.trbj", .norm = T, .quant = "count")
+imm_gu
+vis(imm_gu, .by = "ART", .meta = betaVDJCD4data$meta, .plot = "box")
+ggsave("betaCD4JbyImmune.pdf", width = 55, height = 45, units = c('cm'))
+```
+
+v and j gene usage in CD8
+```{r}
+##alpha ve gene in CD8
+imm_gu <- geneUsage(alphaVDJCD8data$data, "hs.trav", .norm = T, .quant = "count")
+imm_gu
+vis(imm_gu, .by = "ART", .meta = alphaVDJCD8data$meta, .plot = "box")
+ggsave("alphaCD8VbyImmune.pdf", width = 55, height = 45, units = c('cm'))
+
+##beta ve gene in CD8
+imm_gu <- geneUsage(betaVDJCD8data$data, "hs.trbv", .norm = T, .quant = "count")
+imm_gu
+vis(imm_gu, .by = "ART", .meta = betaVDJCD8data$meta, .plot = "box")
+ggsave("betaCD8VbyImmune.pdf", width = 55, height = 45, units = c('cm'))
+
+##alpha j gene in CD8
+imm_gu <- geneUsage(alphaVDJCD8data$data, "hs.traj", .norm = T, .quant = "count")
+imm_gu
+vis(imm_gu, .by = "ART", .meta = alphaVDJCD8data$meta, .plot = "box")
+ggsave("alphaCD8JbyImmune.pdf", width = 55, height = 45, units = c('cm'))
+
+##beta j gene in CD8
+imm_gu <- geneUsage(betaVDJCD8data$data, "hs.trbj", .norm = T, .quant = "count")
+imm_gu
+vis(imm_gu, .by = "ART", .meta = betaVDJCD8data$meta, .plot = "box")
+ggsave("betaCD8JbyImmune.pdf", width = 55, height = 45, units = c('cm'))
+```
+
+v and j gene usage in cd4 NOT INCLUDING ABUNDANCE COUNT
+```{r}
+##alpha ve gene in CD4
+imm_gu <- geneUsage(alphaVDJCD4data$data, "hs.trav", .norm = T, .quant = "NA")
+imm_gu
+p1 = vis(imm_gu, .by = "ART", .meta = alphaVDJCD4data$meta, .plot = "box", .test = FALSE)+scale_fill_manual(values=cd4Palette)
+fixVis(p1)
+ggsave("alphaCD4VbyImmuneNoCount.pdf", width = 40, height = 25, units = c('cm'))
+
+##beta ve gene in CD4
+imm_gu <- geneUsage(betaVDJCD4data$data, "hs.trbv", .norm = T, .quant = "NA")
+imm_gu
+p1 = vis(imm_gu, .by = "ART", .meta = betaVDJCD4data$meta, .plot = "box", .test = FALSE)+scale_fill_manual(values=cd4Palette)
+fixVis(p1)
+ggsave("betaCD4VbyImmuneNoCount.pdf", width = 40, height = 25, units = c('cm'))
+
+##alpha j gene in CD4
+imm_gu <- geneUsage(alphaVDJCD4data$data, "hs.traj", .norm = T, .quant = "NA")
+imm_gu
+p1 = vis(imm_gu, .by = "ART", .meta = alphaVDJCD4data$meta, .plot = "box", .test = FALSE)+scale_fill_manual(values=cd4Palette)
+fixVis(p1)
+ggsave("alphaCD4JbyImmuneNoCount.pdf", width = 40, height = 25, units = c('cm'))
+
+##beta j gene in CD4
+imm_gu <- geneUsage(betaVDJCD4data$data, "hs.trbj", .norm = T, .quant = "NA")
+imm_gu
+p1 = vis(imm_gu, .by = "ART", .meta = betaVDJCD4data$meta, .plot = "box", .test = FALSE)+scale_fill_manual(values=cd4Palette)
+fixVis(p1)
+ggsave("betaCD4JbyImmuneNoCount.pdf", width = 40, height = 25, units = c('cm'))
+```
+
+v and j gene usage in CD8 NOT INCLUDING ABUNDANCE COUNT
+```{r}
+##alpha ve gene in CD8
+imm_gu <- geneUsage(alphaVDJCD8data$data, "hs.trav", .norm = T, .quant = "NA")
+imm_gu
+p1 = vis(imm_gu, .by = "ART", .meta = alphaVDJCD8data$meta, .plot = "box", .test = FALSE)+scale_fill_manual(values=cd8Palette)
+fixVis(p1)
+ggsave("alphaCD8VbyImmuneNoCount.pdf", width = 40, height = 25, units = c('cm'))
+
+##beta ve gene in CD8
+imm_gu <- geneUsage(betaVDJCD8data$data, "hs.trbv", .norm = T, .quant = "NA")
+imm_gu
+p1 = vis(imm_gu, .by = "ART", .meta = betaVDJCD8data$meta, .plot = "box", .test = FALSE)+scale_fill_manual(values=cd8Palette)
+fixVis(p1)
+ggsave("betaCD8VbyImmuneNoCount.pdf", width = 40, height = 25, units = c('cm'))
+
+##alpha j gene in CD8
+imm_gu <- geneUsage(alphaVDJCD8data$data, "hs.traj", .norm = T, .quant = "NA")
+imm_gu
+p1 = vis(imm_gu, .by = "ART", .meta = alphaVDJCD8data$meta, .plot = "box", .test = FALSE)+scale_fill_manual(values=cd8Palette)
+fixVis(p1)
+ggsave("alphaCD8JbyImmuneNoCount.pdf", width = 40, height = 25, units = c('cm'))
+
+##beta j gene in CD8
+imm_gu <- geneUsage(betaVDJCD8data$data, "hs.trbj", .norm = T, .quant = "NA")
+imm_gu
+p1 = vis(imm_gu, .by = "ART", .meta = betaVDJCD8data$meta, .plot = "box", .test = FALSE)+scale_fill_manual(values=cd8Palette)
+fixVis(p1)
+ggsave("betaCD8JbyImmuneNoCount.pdf", width = 40, height = 25, units = c('cm'))
+```
+
+jensen shannon divergense in gene usage - no count included
+```{r}
+#cd4
+imm_gu <- geneUsage(alphaVDJCD4data$data, "hs.trav", .norm = T, .quant = "NA") # alpha CD4 V gene
+imm_gu_js <- geneUsageAnalysis(imm_gu, .method = "js", .verbose = F)
+p1 <- vis(imm_gu_js, .title = "Gene usage JS-divergence: CD4 alpha V gene", .leg.title = "JS", .text.size = 1.5)
+p1
+ggsave("alphaCD4VJensenShannonNoCount.pdf", width = 25, height = 15, units = c('cm'))
+
+imm_gu <- geneUsage(betaVDJCD4data$data, "hs.trbv", .norm = T, .quant = "NA") # beta CD4 V gene
+imm_gu_js <- geneUsageAnalysis(imm_gu, .method = "js", .verbose = F)
+p2 <- vis(imm_gu_js, .title = "Gene usage JS-divergence: CD4 beta V gene", .leg.title = "JS", .text.size = 1.5)
+p2
+ggsave("betaCD4VJensenShannonNoCount.pdf", width = 25, height = 15, units = c('cm'))
+
+imm_gu <- geneUsage(alphaVDJCD4data$data, "hs.traj", .norm = T, .quant = "NA") # alpha CD4 J gene
+imm_gu_js <- geneUsageAnalysis(imm_gu, .method = "js", .verbose = F)
+p3 <- vis(imm_gu_js, .title = "Gene usage JS-divergence: CD4 alpha J gene", .leg.title = "JS", .text.size = 1.5)
+p3
+ggsave("alphaCD4JJensenShannonNoCount.pdf", width = 25, height = 15, units = c('cm'))
+
+imm_gu <- geneUsage(betaVDJCD4data$data, "hs.trbj", .norm = T, .quant = "NA") # beta CD4 J gene
+imm_gu_js <- geneUsageAnalysis(imm_gu, .method = "js", .verbose = F)
+p4 <- vis(imm_gu_js, .title = "Gene usage JS-divergence: CD4 beta J gene", .leg.title = "JS", .text.size = 1.5)
+p4
+ggsave("betaCD4JJensenShannonNoCount.pdf", width = 25, height = 15, units = c('cm'))
+
+p1 + p3+ p2 + p4 +
+  plot_layout(guides = 'collect')
+
+
+ggsave("CD4JensenShannonNoCount.pdf", width = 38, height = 30, units = c('cm'))
+
+#########################################
+#CD8
+imm_gu <- geneUsage(alphaVDJCD8data$data, "hs.trav", .norm = T, .quant = "NA") # alpha CD8 V gene
+imm_gu_js <- geneUsageAnalysis(imm_gu, .method = "js", .verbose = F)
+p1 <- vis(imm_gu_js, .title = "Gene usage JS-divergence: CD8 alpha V gene", .leg.title = "JS", .text.size = 1.5)
+p1
+ggsave("alphaCD8VJensenShannonNoCount.pdf", width = 25, height = 15, units = c('cm'))
+
+imm_gu <- geneUsage(betaVDJCD8data$data, "hs.trbv", .norm = T, .quant = "NA") # beta CD8 V gene
+imm_gu_js <- geneUsageAnalysis(imm_gu, .method = "js", .verbose = F)
+p1 <- vis(imm_gu_js, .title = "Gene usage JS-divergence: CD8 beta V gene", .leg.title = "JS", .text.size = 1.5)
+p1
+ggsave("betaCD8VJensenShannonNoCount.pdf", width = 25, height = 15, units = c('cm'))
+
+imm_gu <- geneUsage(alphaVDJCD8data$data, "hs.traj", .norm = T, .quant = "NA") # alpha CD8 J gene
+imm_gu_js <- geneUsageAnalysis(imm_gu, .method = "js", .verbose = F)
+p1 <- vis(imm_gu_js, .title = "Gene usage JS-divergence: CD8 alpha J gene", .leg.title = "JS", .text.size = 1.5)
+p1
+ggsave("alphaCD8JJensenShannonNoCount.pdf", width = 25, height = 15, units = c('cm'))
+
+imm_gu <- geneUsage(betaVDJCD8data$data, "hs.trbj", .norm = T, .quant = "NA") # beta CD8 J gene
+imm_gu_js <- geneUsageAnalysis(imm_gu, .method = "js", .verbose = F)
+p1 <- vis(imm_gu_js, .title = "Gene usage JS-divergence: CD8 beta J gene", .leg.title = "JS", .text.size = 1.5)
+p1
+ggsave("betaCD8JJensenShannonNoCount.pdf", width = 25, height = 15, units = c('cm'))
+
+```
+
+
+beginning and end time points
+```{r}
+immalpha= repClonality(alphaCDR3CD4dataBeginningAndEnd$data, "homeo")
+immalpha
+p1 = vis(.data = immalpha, .by = c("Status", "Week"), .meta = alphaCDR3CD4dataBeginningAndEnd$meta, .test = TRUE, .plot = "box")+   # ghibli stuff
+  scale_fill_ghibli_d("YesterdayMedium", direction = -1)
+p1
+fixVis(p1)
+ggsave("alphaCD4byBeginningAndEnd.pdf", width = 35, height = 25, units = c('cm')) #clonality start and end alpha cd4
+
+immalpha= repClonality(betaCDR3CD4dataBeginningAndEnd$data, "homeo")
+immalpha
+p2 = vis(.data = immalpha, .by = c("Status", "Week"), .meta = betaCDR3CD4dataBeginningAndEnd$meta, .test = TRUE)+
+  # ghibli stuff
+  scale_fill_ghibli_d("YesterdayMedium", direction = -1)
+p2
+fixVis(p2)
+ggsave("betaCD4byBeginningAndEnd.pdf", width = 35, height = 25, units = c('cm')) #clonality start and end beta cd4
+
+immalpha= repClonality(alphaCDR3CD8dataBeginningAndEnd$data, "homeo")
+immalpha
+p3 = vis(.data = immalpha, .by = c("Status", "Week"), .meta = alphaCDR3CD8dataBeginningAndEnd$meta, .test = TRUE)+
+  # ghibli stuff
+  scale_fill_ghibli_d("LaputaMedium", direction = -1)
+p3
+fixVis(p3)
+ggsave("alphaCD8byBeginningAndEnd.pdf", width = 35, height = 25, units = c('cm')) #clonality start and end alpha cd8
+
+immalpha= repClonality(betaCDR3CD8dataBeginningAndEnd$data, "homeo")
+immalpha
+p4 = vis(.data = immalpha, .by = c("Status", "Week"), .meta = betaCDR3CD8dataBeginningAndEnd$meta, .test = TRUE)+
+  # ghibli stuff
+  scale_fill_ghibli_d("LaputaMedium", direction = -1)
+ggsave("betaCD8byBeginningAndEnd.pdf", width = 35, height = 25, units = c('cm')) #clonality start and end beta cd8
+p4
+
+fixVis(p4)
+p1 + p2+ p3 + p4 +
+  plot_layout(guides = 'collect')
+vis
+
+ggsave("start_and_end_clonality.pdf", width = 35, height = 45, units = c('cm'))
+```
+
+here i'm going to do spectratypes of patient K's CD4 and CD8 beta chain samples
+```{r}
+
+Spectratyping (Patient K CD4+ Week 0)
+CDR3 length (aa)
+Sequence count
+p1 <- vis(spectratype(betaCDR3CD4dataPTI$data[[1]], .quant = "id", .col = "aa")) #this does not include abundance, like heather 2018
+p1
+fixVis(p1)
+p2 <- vis(spectratype(betaCDR3CD4dataPTI$data[[2]], .quant = "id", .col = "aa")) #this does not include abundance, like heather 2018
+p2
+
+fixVis(p2)
+p3 <- vis(spectratype(betaCDR3CD4dataPTI$data[[3]], .quant = "id", .col = "aa")) #this does not include abundance, like heather 2018
+p3
+fixVis(p3)
+p4 <- vis(spectratype(betaCDR3CD4dataPTI$data[[4]], .quant = "id", .col = "aa")) #this does not include abundance, like heather 2018
+p4
+fixVis(p4)
+p1 + p3+ p2 + p4 +
+  plot_layout(guides = 'collect')
+
+
+ggsave("spectra_K_cd4_beta.pdf", width = 38, height = 30, units = c('cm'))
+
+p1 <- vis(spectratype(betaCDR3CD8dataPTI$data[[1]], .quant = "id", .col = "aa")) #this does not include abundance, like heather 2018
+p1
+fixVis(p1)
+
+p2 <- vis(spectratype(betaCDR3CD8dataPTI$data[[2]], .quant = "id", .col = "aa")) #this does not include abundance, like heather 2018
+p2
+fixVis(p2)
+p3 <- vis(spectratype(betaCDR3CD8dataPTI$data[[3]], .quant = "id", .col = "aa")) #this does not include abundance, like heather 2018
+p3
+fixVis(p3)
+p4 <- vis(spectratype(betaCDR3CD8dataPTI$data[[4]], .quant = "id", .col = "aa")) #this does not include abundance, like heather 2018
+p4
+fixVis(p4)
+
+p1 + p3+ p2 + p4 +
+  plot_layout(guides = 'collect')
+
+Spectratyping (Patient K CD8+ Week 0)
+CDR3 length (aa)
+Sequence count
+
+ggsave("spectra_K_cd8_beta.pdf", width = 38, height = 30, units = c('cm'))
+
+#experiment - spectrac by week?? doesn't work as it uses raw numbers
+exp_len <- repExplore(betaCDR3CD4data$data, .method = "len", .col = "aa")
+p1 <- vis(exp_len, .by = "Week", .meta = betaCDR3CD4data$meta)
+p1
+
+```
+
+clonotype tracking
+```{r}
+tc1 <- trackClonotypes(betaCDR3CD8data$data, list(1, 10), .col = "aa")
+tc1
+p1 <- vis(tc1)
+p1
+
+tc1 <- trackClonotypes(betaCDR3CD8dataPTI$data, list(1, 10), .col = "aa")
+tc1
+p1 <- vis(tc1)
+p1
+
+tc1 <- trackClonotypes(betaCDR3CD8dataPTI$data, list(5, 10), .col = "aa")
+tc1
+p2 <- vis(tc1)
+p2
+
+tc1 <- trackClonotypes(betaCDR3CD8dataPTI$data, list(9, 10), .col = "aa")
+tc1
+p3 <- vis(tc1)
+p3
+
+tc1 <- trackClonotypes(betaCDR3CD8dataPTI$data, list(13, 10), .col = "aa")
+tc1
+p4 <- vis(tc1)
+p4
+```
+
+tracking the top 10 cdr3 seqs in cd4 alpha
+
+```{r}
+
+
+tc1 <- trackClonotypes(alphaCDR3CD4data$data, list(3, 10), .col = "aa") #F
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("alphaCD4top10from0F.pdf", width = 35, height = 25, units = c('cm'))
+
+
+tc1 <- trackClonotypes(alphaCDR3CD4data$data, list(5, 10), .col = "aa") #K
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("alphaCD4top10from0K.pdf", width = 35, height = 25, units = c('cm')) 
+
+
+tc1 <- trackClonotypes(alphaCDR3CD4data$data, list(9, 10), .col = "aa") #L
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("alphaCD4top10from0L.pdf", width = 35, height = 25, units = c('cm')) #clonality start and end alpha cd4
+
+tc1 <- trackClonotypes(alphaCDR3CD4data$data, list(12, 10), .col = "aa") #P
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("alphaCD4top10from0P.pdf", width = 35, height = 25, units = c('cm')) #clonality start and end alpha cd4
+
+tc1 <- trackClonotypes(alphaCDR3CD4data$data, list(14, 10), .col = "aa") #Q
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("alphaCD4top10from0Q.pdf", width = 35, height = 25, units = c('cm')) #clonality start and end alpha cd4
+
+tc1 <- trackClonotypes(alphaCDR3CD4data$data, list(18, 10), .col = "aa") #T
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("alphaCD4top10from0T.pdf", width = 35, height = 25, units = c('cm')) #clonality start and end alpha cd4
+
+```
+tracking the top 10 cdr3 seqs in cd4 beta
+```{r}
+tc1 <- trackClonotypes(betaCDR3CD4data$data, list(1, 10), .col = "aa") #D
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("betaCD4top10from0D.pdf", width = 35, height = 25, units = c('cm'))
+
+tc1 <- trackClonotypes(betaCDR3CD4data$data, list(3, 10), .col = "aa") #E
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("betaCD4top10from0E.pdf", width = 35, height = 25, units = c('cm'))
+
+tc1 <- trackClonotypes(betaCDR3CD4data$data, list(5, 10), .col = "aa") #F
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("betaCD4top10from0F.pdf", width = 35, height = 25, units = c('cm'))
+
+tc1 <- trackClonotypes(betaCDR3CD4data$data, list(7, 10), .col = "aa") #K
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("betaCD4top10from0K.pdf", width = 35, height = 25, units = c('cm'))
+
+tc1 <- trackClonotypes(betaCDR3CD4data$data, list(11, 10), .col = "aa") #L
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("betaCD4top10from0L.pdf", width = 35, height = 25, units = c('cm'))
+
+tc1 <- trackClonotypes(betaCDR3CD4data$data, list(15, 10), .col = "aa") #P
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("betaCD4top10from0P.pdf", width = 35, height = 25, units = c('cm'))
+
+
+tc1 <- trackClonotypes(betaCDR3CD4data$data, list(17, 10), .col = "aa") #Q
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("betaCD4top10from0Q.pdf", width = 35, height = 25, units = c('cm'))
+
+tc1 <- trackClonotypes(betaCDR3CD4data$data, list(19, 10), .col = "aa") #T
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("betaCD4top10from0T.pdf", width = 35, height = 25, units = c('cm'))
+
+```
+tracking the top 10 cdr3 seqs in cd8 alpha
+```{r}
+tc1 <- trackClonotypes(alphaCDR3CD8data$data, list(1, 10), .col = "aa") #E
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("alphaCD8top10from0E.pdf", width = 35, height = 25, units = c('cm'))
+
+tc1 <- trackClonotypes(alphaCDR3CD8data$data, list(3, 10), .col = "aa") #F
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("alphaCD8top10from0F.pdf", width = 35, height = 25, units = c('cm'))
+
+tc1 <- trackClonotypes(alphaCDR3CD8data$data, list(5, 10), .col = "aa") #K
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("alphaCD8top10from0K.pdf", width = 35, height = 25, units = c('cm'))
+
+tc1 <- trackClonotypes(alphaCDR3CD8data$data, list(9, 10), .col = "aa") #L
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("alphaCD8top10from0L.pdf", width = 35, height = 25, units = c('cm'))
+
+tc1 <- trackClonotypes(alphaCDR3CD8data$data, list(14, 10), .col = "aa") #Q
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("alphaCD8top10from0Q.pdf", width = 35, height = 25, units = c('cm'))
+
+tc1 <- trackClonotypes(alphaCDR3CD8data$data, list(18, 10), .col = "aa") #T
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("alphaCD8top10from0T.pdf", width = 35, height = 25, units = c('cm'))
+
+tc1 <- trackClonotypes(alphaCDR3CD8data$data, list(21, 10), .col = "aa") #V
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("alphaCD8top10from0V.pdf", width = 35, height = 25, units = c('cm'))
+
+```
+
+tracking the top 10 cdr3 seqs in cd8 beta
+```{r}
+tc1 <- trackClonotypes(betaCDR3CD8data$data, list(1, 10), .col = "aa") #E
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("betaCD8top10from0E.pdf", width = 35, height = 25, units = c('cm'))
+
+tc1 <- trackClonotypes(betaCDR3CD8data$data, list(3, 10), .col = "aa") #F
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("betaCD8top10from0F.pdf", width = 35, height = 25, units = c('cm'))
+
+tc1 <- trackClonotypes(betaCDR3CD8data$data, list(5, 10), .col = "aa") #K
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("betaCD8top10from0K.pdf", width = 35, height = 25, units = c('cm'))
+
+tc1 <- trackClonotypes(betaCDR3CD8data$data, list(9, 10), .col = "aa") #L
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("betaCD8top10from0L.pdf", width = 35, height = 25, units = c('cm'))
+
+tc1 <- trackClonotypes(betaCDR3CD8data$data, list(14, 10), .col = "aa") #Q
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("betaCD8top10from0Q.pdf", width = 35, height = 25, units = c('cm'))
+
+tc1 <- trackClonotypes(betaCDR3CD8data$data, list(18, 10), .col = "aa") #T
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("betaCD8top10from0T.pdf", width = 35, height = 25, units = c('cm'))
+
+tc1 <- trackClonotypes(betaCDR3CD8data$data, list(22, 10), .col = "aa") #V
+tc1
+p1 <- vis(tc1)
+p1
+ggsave("betaCD8top10from0V.pdf", width = 35, height = 25, units = c('cm'))
+
+```
+going to look at k-mers
+```{r}
+kmers <- getKmers(alphaCDR3CD4data$data, 5)
+vis(kmers, .by = "Week", .meta = alphaCDR3CD4data$meta)
+
+p2 <- vis(kmers, .position = "fill", .by = "Week", .meta = alphaCDR3CD4data$meta)
+p2
+ggsave("kmersCD4alpha.pdf", width = 35, height = 25, units = c('cm'))
+
+
+imm.km <- getKmers(alphaCDR3CD4dataPTI$data, 5)
+p2 <- vis(imm.km, .by = "ART", .meta = alphaCDR3CD4dataPTI$meta)
+p2
+
+#not enormously helpful as I can't separate by treatment
+
+```
+
+
+now for some ordination
+```{r}
+imm_ov1 <- repOverlap(betaCDR3CD8data$data, .method = "jaccard", .verbose = F)
+p1 <- vis(imm_ov1)
+imm_ov1
+p1
+repOverlapAnalysis(imm_ov1, "tsne") %>% vis()
+
+#not sure if useful/intertewsting
+```
+
+public clonotypes
+```{r}
+pr.aa <- pubRep(betaCDR3CD8data$data, "aa", .verbose = F) #show abundance/appearance in all samples
+pr.aa
+
+pr1 <- pubRepFilter(pr.aa, betaCDR3CD8data$meta, c(Week = 12), .min.samples = 2) #selects sequences which appear in at least two off-treatemtn samples
+pr1
+
+pr1 <- pubRepFilter(pr.aa, betaCDR3CD8data$meta, c(ART = "Off"), .min.samples = 2) #selects sequences which appear in at least two off-treatemtn samples
+pr1
+write.csv(pr1, "cd8betaPublicOffART.csv")
+
+pr2 <- pubRepFilter(pr.aa, betaCDR3CD8data$meta, c(ART = "On")) #all on treatment samples
+pr2
+
+pr3 <- pubRepFilter(pr.aa, betaCDR3CD8data$meta, c(Status = "CT")) #all on treatment samples
+pr3 #CT only
+
+testio = anti_join(pr1, pr2, by = "CDR3.aa") #only the elements of pr1 that aren't also in pr2
+write.csv(testio, "cd8betaPublicOffARTNotInOff.csv")
+testio
+
+testio2 = anti_join(testio, pr3, by = "CDR3.aa") #only the elements of testio that aren't also in pr3
+write.csv(testio2, "cd8betaPublicOffARTNotInOfforNA.csv")
+testio2
+
+# take out known samples
+testio2_3s <- testio2[testio2$Samples >2,]
+
+testio2 <- testio2[!testio2$Samples >2,]
+
+# take out rest
+comTab <- complete.cases(testio2[,3:4]) | complete.cases(testio2[,5:6]) | complete.cases(testio2[,7:8]) | complete.cases(testio2[,9:10])
+
+
+
+
+target <- c("CASSLAGNTIYF", "CASSLGVGAAYEQYF", "CASSLQGRDEQFF", "CSALGRDYTF", "CASSDETGASYEQYF")
+tc <- trackClonotypes(betaCDR3CD8data$data, target, .col = "aa")
+vis(tc)
+```
+
+

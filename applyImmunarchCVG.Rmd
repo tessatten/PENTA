@@ -1,0 +1,45 @@
+---
+title: "now apply immunarch to CVG"
+author: "Tess Attenborough"
+date: "14/07/2020"
+output: html_document
+---
+
+```{r}
+data <- list(`CVG001_-8` = `CVG001_-8`, CVG001_12 = CVG001_12, CVG001_27 = CVG001_27, CVG001_41 = CVG001_41, CVG001_104 = CVG001_104, CVG002_10 = CVG002_10, CVG002_26 = CVG002_26, CVG002_32 = CVG002_32, CVG002_67 = CVG002_67, CVG002_69 = CVG002_69, CVG002_90 = CVG002_90, CVG002_207 = CVG002_207, CVG002_222= CVG002_222, CVG002_304 = CVG002_304,CVG003_0 = CVG003_0, CVG003_32 = CVG003_32, CVG003_180 = CVG003_180,CVG004_0 = CVG004_0, CVG004_28 = CVG004_28, CVG004_161 = CVG004_161, CVG004_210 = CVG004_210,CVG005_34 = CVG005_34, CVG005_43 = CVG005_43, CVG005_44 = CVG005_44,`CVG012_-7` = `CVG012_-7`, CVG012_1 = CVG012_1, CVG012_7 = CVG012_7, CVG012_25 = CVG012_25, CVG012_36 = CVG012_36, CVG012_62 = CVG012_62, CVG012_89 = CVG012_89, CVG012_117 = CVG012_117, CVG012_236 = CVG012_236, CVG012_271 = CVG012_271,CVG014_18 = CVG014_18, CVG014_19 = CVG014_19, CVG014_34 = CVG014_34, CVG014_55 = CVG014_55,CVG016_8 = CVG016_8, CVG016_35 = CVG016_35, CVG016_220 = CVG016_220,`CVG017_-6` = `CVG017_-6`, CVG017_1 = CVG017_1, CVG017_35 = CVG017_35, CVG017_147 = CVG017_147, CVG017_180 = CVG017_180,CVG019_39 = CVG019_39, CVG019_61 = CVG019_61, CVG019_82 = CVG019_82, CVG019_370 = CVG019_370,`CVG021_-7` = `CVG021_-7`, CVG021_0 = CVG021_0, CVG021_16 = CVG021_16, CVG021_23 = CVG021_23,`CVG028_-13` = `CVG028_-13`, CVG028_1 = CVG028_1, CVG028_41 = CVG028_41, CVG028_65 = CVG028_65, CVG028_281 = CVG028_281,`CVG032_-7` = `CVG032_-7`, `CVG032_-2` = `CVG032_-2`, CVG032_0 = CVG032_0, CVG032_42 = CVG032_42, CVG032_69 = CVG032_69, CVG032_96 = CVG032_96, CVG032_98 = CVG032_98, CVG032_142 = CVG032_142,CVG041_1 = CVG041_1, CVG041_16 = CVG041_16, CVG041_37 = CVG041_37, CVG041_58 = CVG041_58, CVG041_120 = CVG041_120, CVG041_134 = CVG041_134, CVG041_150 = CVG041_150,CVG042_12 = CVG042_12, CVG042_20 = CVG042_20, CVG042_34 = CVG042_34, CVG042_88 = CVG042_88, CVG042_158 = CVG042_158,`CVG046_-7` = `CVG046_-7`, CVG046_19 = CVG046_19, CVG046_37 = CVG046_37, CVG046_62 = CVG046_62,`CVG047_-8` = `CVG047_-8`, CVG047_13 = CVG047_13, CVG047_25 = CVG047_25, CVG047_31 = CVG047_31, CVG047_35 = CVG047_35, CVG047_60 = CVG047_60, CVG047_90 = CVG047_90, CVG047_180 = CVG047_180, CVG047_242 = CVG047_242,CVG048_7 = CVG048_7, CVG048_9 = CVG048_9, CVG048_153 = CVG048_153,CVG052_0 = CVG052_0, CVG052_7 = CVG052_7, CVG052_62 = CVG052_62,`CVG054_-7` = `CVG054_-7`, CVG054_6 = CVG054_6, CVG054_28 = CVG054_28)
+# nested lists
+the20immun <- list(data = data, meta = metadata_cvg) #all the alpha CD4 samples over 1000 reads
+
+repClonality(the20immun$data, "homeo") %>% vis()
+
+repClonality(the20immun$data, .method = "rare")%>% vis()
+
+repClonality(the20immun$data, "homeo",
+  .clone.types = c(Small = .01, Medium = 0.1, Large = 1, Hyperexpanded = 5)) %>% vis()
+repClonality(the20immun$data, "clonal.prop") %>% vis()
+
+
+```
+```{r}
+
+Small = .0001, Medium = .001, Large = .01, Hyperexpanded = 1
+
+homeo = repClonality(CVG047immun$data, "homeo",
+  .clone.types = c(Rare = .01, Small = 0.1, Medium = 0.25, Large = 0.5, Hyperexpanded = 1)) %>% vis()
+homeo 
+
+homeo %>% vis()
+
+homeo = repClonality(the20immun$data, "homeo",
+  .clone.types = c(Rare = .01, Small = 0.1, Medium = 0.25, Large = 0.5, Hyperexpanded = 1)) %>% vis()
+homeo 
+
+homeo %>% vis()
+```
+```{r}
+repClonality(the20immun$data, "homeo",
+  .clone.types = c(Rare = .01, Small = 0.1, Medium = 0.25, Large = 0.5, Hyperexpanded = 1)) %>% vis()
+ggsave("the20immunClonality.pdf", width = 45, height = 35, units = c('cm')) #clonality by pti patients on and off treatment
+
+```
+
